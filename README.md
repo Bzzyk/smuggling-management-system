@@ -104,23 +104,21 @@ Projekt realizowany jest przez trzy osoby.
 | Osoba | Główny zakres |
 |---|---|
 | Kamil Osakowicz | Użytkownicy, role, zlecenia, podstawowa konfiguracja bezpieczeństwa, historia zmian |
-| Osoba 2 | Transporty, trasy, pojazdy, przypisanie przemytników, bezpieczeństwo modułu transportowego |
-| Osoba 3 | Ładunki, magazyny, płatności, raporty, bezpieczeństwo modułu magazynowo-finansowego |
+| Filip Kamiński | Transporty, trasy, pojazdy, przypisanie przemytników, bezpieczeństwo modułu transportowego |
+| Karol Daniło | Ładunki, magazyny, płatności, raporty, bezpieczeństwo modułu magazynowo-finansowego |
 
 Szczegółowy podział pracy znajduje się w pliku:
 
-```text
-docs/04-podzial-pracy.md
+`docs/04-podzial-pracy.md`
 
 ## Analiza biznesowa
 
 Opis zakresu systemu, ról użytkowników, głównych encji, operacji biznesowych oraz wymagań znajduje się w pliku:
 
-```text
-docs/05-analiza-biznesowa.md
+`docs/05-analiza-biznesowa.md`
 
 ## Autorzy
 
 - Kamil Osakowicz
-- Osoba 2
-- Osoba 3
+- Filip Kamiński
+- Karol Daniło

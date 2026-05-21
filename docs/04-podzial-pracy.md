@@ -18,8 +18,8 @@ Projekt realizowany jest przez trzy osoby. Podział pracy został przygotowany t
 | Osoba | Główny obszar odpowiedzialności |
 |---|---|
 | Kamil Osakowicz | Użytkownicy, role, zlecenia, podstawowa konfiguracja bezpieczeństwa, historia zmian |
-| Osoba 2 | Transporty, trasy, pojazdy, przypisanie przemytników, bezpieczeństwo modułu transportowego |
-| Osoba 3 | Ładunki, magazyny, płatności, raporty, bezpieczeństwo modułu magazynowo-finansowego |
+| Filip Kamiński | Transporty, trasy, pojazdy, przypisanie przemytników, bezpieczeństwo modułu transportowego |
+| Karol Daniło | Ładunki, magazyny, płatności, raporty, bezpieczeństwo modułu magazynowo-finansowego |
 
 Każda osoba odpowiada za:
 
@@ -91,11 +91,11 @@ Kamil przygotowuje ogólną tabelę `audit_logs`, ale nie odpowiada za wszystkie
 
 ---
 
-## 2.2. Osoba 2
+## 2.2. Filip Kamiński
 
 ### Tabele
 
-Osoba 2 odpowiada za przygotowanie tabel związanych z transportami, trasami, pojazdami oraz przypisaniem przemytników:
+Filip Kamiński odpowiada za przygotowanie tabel związanych z transportami, trasami, pojazdami oraz przypisaniem przemytników:
 
 - `transports`
 - `transport_statuses`
@@ -135,11 +135,11 @@ Osoba 2 odpowiada za przygotowanie tabel związanych z transportami, trasami, po
 
 ---
 
-## 2.3. Osoba 3
+## 2.3. Karol Daniło
 
 ### Tabele
 
-Osoba 3 odpowiada za przygotowanie tabel związanych z ładunkami, magazynami, płatnościami i raportami:
+Karol Daniło odpowiada za przygotowanie tabel związanych z ładunkami, magazynami, płatnościami i raportami:
 
 - `cargo`
 - `cargo_types`
@@ -250,11 +250,11 @@ Kamil odpowiada za:
 
 ---
 
-## 3.2. Osoba 2
+## 3.2. Filip Kamiński
 
 ### Moduły aplikacji
 
-Osoba 2 odpowiada za moduły:
+Filip Kamiński odpowiada za moduły:
 
 - `transport`
 - `route`
@@ -301,7 +301,7 @@ Osoba 2 odpowiada za moduły:
 
 ### Zakres funkcjonalny
 
-Osoba 2 odpowiada za:
+Filip Kamiński odpowiada za:
 
 - CRUD transportów,
 - CRUD tras,
@@ -317,11 +317,11 @@ Osoba 2 odpowiada za:
 
 ---
 
-## 3.3. Osoba 3
+## 3.3. Karol Daniło
 
 ### Moduły aplikacji
 
-Osoba 3 odpowiada za moduły:
+Karol Daniło odpowiada za moduły:
 
 - `cargo`
 - `warehouse`
@@ -375,7 +375,7 @@ Osoba 3 odpowiada za moduły:
 
 ### Zakres funkcjonalny
 
-Osoba 3 odpowiada za:
+Karol Daniło odpowiada za:
 
 - CRUD ładunków,
 - CRUD magazynów,
@@ -426,9 +426,9 @@ Kamil nie odpowiada za pełne zabezpieczenie wszystkich modułów aplikacji. Ka�
 
 ---
 
-## 4.2. Osoba 2 — kontrola dostępu do modułu transportowego
+## 4.2. Filip Kamiński — kontrola dostępu do modułu transportowego
 
-Osoba 2 odpowiada za zabezpieczenie modułów związanych z transportami, trasami, pojazdami oraz przypisaniem przemytników.
+Filip Kamiński odpowiada za zabezpieczenie modułów związanych z transportami, trasami, pojazdami oraz przypisaniem przemytników.
 
 ### Zakres
 
@@ -450,9 +450,9 @@ Osoba 2 odpowiada za zabezpieczenie modułów związanych z transportami, trasam
 
 ---
 
-## 4.3. Osoba 3 — kontrola dostępu do modułu magazynowo-finansowego i raportów
+## 4.3. Karol Daniło — kontrola dostępu do modułu magazynowo-finansowego i raportów
 
-Osoba 3 odpowiada za zabezpieczenie modułów związanych z ładunkami, magazynami, płatnościami oraz raportami.
+Karol Daniło odpowiada za zabezpieczenie modułów związanych z ładunkami, magazynami, płatnościami oraz raportami.
 
 ### Zakres
 
@@ -516,7 +516,7 @@ Kamil odpowiada za:
 
 ---
 
-## 5.2. Osoba 2
+## 5.2. Filip Kamiński
 
 ### Widoki
 
@@ -533,7 +533,7 @@ Kamil odpowiada za:
 
 ### Zakres
 
-Osoba 2 odpowiada za:
+Filip Kamiński odpowiada za:
 
 - listę transportów,
 - formularz dodawania i edycji transportu,
@@ -551,7 +551,7 @@ Osoba 2 odpowiada za:
 
 ---
 
-## 5.3. Osoba 3
+## 5.3. Karol Daniło
 
 ### Widoki
 
@@ -570,7 +570,7 @@ Osoba 2 odpowiada za:
 
 ### Zakres
 
-Osoba 3 odpowiada za:
+Karol Daniło odpowiada za:
 
 - listę ładunków,
 - formularz ładunku,
@@ -606,9 +606,9 @@ Kamil odpowiada za REST API związane ze zleceniami i użytkownikami:
 
 ---
 
-## 6.2. Osoba 2
+## 6.2. Filip Kamiński
 
-Osoba 2 odpowiada za REST API związane z transportami, trasami i pojazdami:
+Filip Kamiński odpowiada za REST API związane z transportami, trasami i pojazdami:
 
 - `GET /api/transports`
 - `GET /api/transports/{id}`
@@ -622,9 +622,9 @@ Osoba 2 odpowiada za REST API związane z transportami, trasami i pojazdami:
 
 ---
 
-## 6.3. Osoba 3
+## 6.3. Karol Daniło
 
-Osoba 3 odpowiada za REST API związane z ładunkami, magazynami, płatnościami i raportami:
+Karol Daniło odpowiada za REST API związane z ładunkami, magazynami, płatnościami i raportami:
 
 - `GET /api/cargo`
 - `GET /api/cargo/{id}`
@@ -667,9 +667,9 @@ Kamil odpowiada za walidację:
 
 ---
 
-## 7.2. Osoba 2
+## 7.2. Filip Kamiński
 
-Osoba 2 odpowiada za walidację:
+Filip Kamiński odpowiada za walidację:
 
 - numeru rejestracyjnego pojazdu,
 - daty transportu,
@@ -691,9 +691,9 @@ Osoba 2 odpowiada za walidację:
 
 ---
 
-## 7.3. Osoba 3
+## 7.3. Karol Daniło
 
-Osoba 3 odpowiada za walidację:
+Karol Daniło odpowiada za walidację:
 
 - nazwy ładunku,
 - typu ładunku,
@@ -743,9 +743,9 @@ Kamil odpowiada za przygotowanie:
 
 ---
 
-## 8.2. Osoba 2
+## 8.2. Filip Kamiński
 
-Osoba 2 odpowiada za przygotowanie:
+Filip Kamiński odpowiada za przygotowanie:
 
 - części pliku `docs/06-model-danych.md` dotyczącej transportów, tras i pojazdów,
 - części pliku `docs/08-api-rest.md` dotyczącej transportów, tras i pojazdów,
@@ -765,9 +765,9 @@ Osoba 2 odpowiada za przygotowanie:
 
 ---
 
-## 8.3. Osoba 3
+## 8.3. Karol Daniło
 
-Osoba 3 odpowiada za przygotowanie:
+Karol Daniło odpowiada za przygotowanie:
 
 - części pliku `docs/06-model-danych.md` dotyczącej ładunków, magazynów i płatności,
 - części pliku `docs/08-api-rest.md` dotyczącej ładunków, magazynów, płatności i raportów,
@@ -801,7 +801,7 @@ Osoba 3 odpowiada za przygotowanie:
 - pierwszą konfigurację Spring Boot,
 - szkic logowania i Spring Security.
 
-### Osoba 2 pokazuje
+### Filip Kamiński pokazuje
 
 - tabele `transports`, `routes`, `vehicles`,
 - pierwszy CRUD transportów,
@@ -810,7 +810,7 @@ Osoba 3 odpowiada za przygotowanie:
 - plan zabezpieczenia modułu transportów,
 - plan przypisywania przemytników do transportów.
 
-### Osoba 3 pokazuje
+### Karol Daniło pokazuje
 
 - tabele `cargo`, `warehouses`, `payments`,
 - pierwszy CRUD ładunków lub magazynów,
@@ -832,7 +832,7 @@ Osoba 3 odpowiada za przygotowanie:
 - REST API zleceń,
 - historię zmian dla użytkowników i zleceń.
 
-### Osoba 2 pokazuje
+### Filip Kamiński pokazuje
 
 - CRUD transportów,
 - CRUD tras,
@@ -843,7 +843,7 @@ Osoba 3 odpowiada za przygotowanie:
 - REST API transportów,
 - historię zmian dla transportów.
 
-### Osoba 3 pokazuje
+### Karol Daniło pokazuje
 
 - CRUD ładunków,
 - CRUD magazynów,
