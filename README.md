@@ -7,7 +7,7 @@ Projekt edukacyjny realizowany na potrzeby przedmiotów:
 
 ## Opis projektu
 
-System zarządzania przemytem papierosów to fikcyjna aplikacja webowa służąca do obsługi prześmiewczego scenariusza organizacji przemytu papierosów.
+System zarządzania przemytem papierosów to fikcyjna aplikacja webowa służąca do obsługi wyimaginowanego scenariusza organizacji przemytu papierosów.
 
 Projekt nie jest przeznaczony do rzeczywistego wykorzystania. Jego celem jest zaprezentowanie umiejętności projektowania relacyjnej bazy danych oraz aplikacji webowej w Javie.
 
@@ -111,3 +111,16 @@ Szczegółowy podział pracy znajduje się w pliku:
 
 ```text
 docs/04-podzial-pracy.md
+
+## Analiza biznesowa
+
+Opis zakresu systemu, ról użytkowników, głównych encji, operacji biznesowych oraz wymagań znajduje się w pliku:
+
+```text
+docs/05-analiza-biznesowa.md
+
+## Autorzy
+
+- Kamil Osakowicz
+- Osoba 2
+- Osoba 3
