@@ -1,0 +1,33 @@
+# Java / Maven / Gradle
+target/
+build/
+.gradle/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+application-local.properties
+
+# Database dumps
+*.dump
+*.backup
+
+# Node / frontend if needed later
+node_modules/
+dist/
