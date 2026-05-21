@@ -18,7 +18,7 @@ Projekt realizowany jest przez trzy osoby. Podział pracy został przygotowany t
 | Osoba | Główny obszar odpowiedzialności |
 |---|---|
 | Kamil Osakowicz | Użytkownicy, role, zlecenia, podstawowa konfiguracja bezpieczeństwa, historia zmian |
-| Osoba 2 | Transporty, trasy, pojazdy, przypisanie kurierów, bezpieczeństwo modułu transportowego |
+| Osoba 2 | Transporty, trasy, pojazdy, przypisanie przemytników, bezpieczeństwo modułu transportowego |
 | Osoba 3 | Ładunki, magazyny, płatności, raporty, bezpieczeństwo modułu magazynowo-finansowego |
 
 Każda osoba odpowiada za:
@@ -59,7 +59,7 @@ Kamil odpowiada za przygotowanie tabel związanych z użytkownikami, rolami, zle
 ### Opis tabel
 
 - `users` — przechowuje dane użytkowników systemu.
-- `roles` — przechowuje role użytkowników, np. `ADMIN`, `BOSS`, `COURIER`, `ACCOUNTANT`.
+- `roles` — przechowuje role użytkowników, np. `ADMIN`, `BOSS`, `SMUGGLER`, `ACCOUNTANT`.
 - `user_roles` — tabela łącząca użytkowników z rolami.
 - `orders` — przechowuje zlecenia przemytu.
 - `order_statuses` — słownik statusów zleceń.
@@ -95,13 +95,13 @@ Kamil przygotowuje ogólną tabelę `audit_logs`, ale nie odpowiada za wszystkie
 
 ### Tabele
 
-Osoba 2 odpowiada za przygotowanie tabel związanych z transportami, trasami, pojazdami oraz przypisaniem kurierów:
+Osoba 2 odpowiada za przygotowanie tabel związanych z transportami, trasami, pojazdami oraz przypisaniem przemytników:
 
 - `transports`
 - `transport_statuses`
 - `routes`
 - `route_difficulty_levels`
-- `courier_assignments`
+- `smuggler_assignments`
 - `vehicles`
 
 ### Opis tabel
@@ -110,22 +110,22 @@ Osoba 2 odpowiada za przygotowanie tabel związanych z transportami, trasami, po
 - `transport_statuses` — słownik statusów transportu.
 - `routes` — przechowuje trasy transportu.
 - `route_difficulty_levels` — słownik poziomów trudności lub ryzyka trasy.
-- `courier_assignments` — przechowuje przypisania kurierów do transportów.
+- `smuggler_assignments` — przechowuje przypisania przemytników do transportów.
 - `vehicles` — przechowuje dane pojazdów.
 
 ### Widoki SQL
 
 - `v_active_transports` — widok pokazujący aktywne transporty.
-- `v_courier_workload` — widok pokazujący obciążenie kurierów transportami.
+- `v_smuggler_workload` — widok pokazujący obciążenie przemytników transportami.
 
 ### Funkcje SQL
 
 - `calculate_route_risk(route_id)` — funkcja obliczająca poziom ryzyka danej trasy.
-- `count_active_transports_for_courier(user_id)` — funkcja licząca aktywne transporty przypisane do danego kuriera.
+- `count_active_transports_for_smuggler(user_id)` — funkcja licząca aktywne transporty przypisane do danego przemytnika.
 
 ### Procedury SQL
 
-- `assign_courier_to_transport(...)` — procedura przypisująca kuriera do transportu.
+- `assign_smuggler_to_transport(...)` — procedura przypisująca przemytnika do transportu.
 - `change_transport_status(...)` — procedura zmieniająca status transportu.
 
 ### Triggery SQL
@@ -259,7 +259,7 @@ Osoba 2 odpowiada za moduły:
 - `transport`
 - `route`
 - `vehicle`
-- `courierAssignment`
+- `smugglerAssignment`
 
 ### Encje JPA
 
@@ -268,7 +268,7 @@ Osoba 2 odpowiada za moduły:
 - `Route`
 - `RouteDifficultyLevel`
 - `Vehicle`
-- `CourierAssignment`
+- `SmugglerAssignment`
 
 ### Repozytoria
 
@@ -277,21 +277,21 @@ Osoba 2 odpowiada za moduły:
 - `RouteRepository`
 - `RouteDifficultyLevelRepository`
 - `VehicleRepository`
-- `CourierAssignmentRepository`
+- `SmugglerAssignmentRepository`
 
 ### Serwisy
 
 - `TransportService`
 - `RouteService`
 - `VehicleService`
-- `CourierAssignmentService`
+- `SmugglerAssignmentService`
 
 ### Kontrolery MVC
 
 - `TransportController`
 - `RouteController`
 - `VehicleController`
-- `CourierAssignmentController`
+- `SmugglerAssignmentController`
 
 ### Kontrolery REST
 
@@ -306,7 +306,7 @@ Osoba 2 odpowiada za:
 - CRUD transportów,
 - CRUD tras,
 - CRUD pojazdów,
-- przypisywanie kuriera do transportu,
+- przypisywanie przemytnika do transportu,
 - zmianę statusu transportu,
 - sortowanie transportów,
 - filtrowanie transportów po dacie i statusie,
@@ -428,7 +428,7 @@ Kamil nie odpowiada za pełne zabezpieczenie wszystkich modułów aplikacji. Ka�
 
 ## 4.2. Osoba 2 — kontrola dostępu do modułu transportowego
 
-Osoba 2 odpowiada za zabezpieczenie modułów związanych z transportami, trasami, pojazdami oraz przypisaniem kurierów.
+Osoba 2 odpowiada za zabezpieczenie modułów związanych z transportami, trasami, pojazdami oraz przypisaniem przemytników.
 
 ### Zakres
 
@@ -443,9 +443,9 @@ Osoba 2 odpowiada za zabezpieczenie modułów związanych z transportami, trasam
 ### Przykładowe reguły
 
 - `ADMIN` i `BOSS` mogą dodawać, edytować i usuwać transporty,
-- `COURIER` może przeglądać tylko przypisane do siebie transporty,
-- `COURIER` może zmienić status przypisanego do siebie transportu,
-- `COURIER` nie może usuwać transportów,
+- `SMUGGLER` może przeglądać tylko przypisane do siebie transporty,
+- `SMUGGLER` może zmienić status przypisanego do siebie transportu,
+- `SMUGGLER` nie może usuwać transportów,
 - użytkownik bez odpowiedniej roli nie ma dostępu do modułu transportów.
 
 ---
@@ -469,7 +469,7 @@ Osoba 3 odpowiada za zabezpieczenie modułów związanych z ładunkami, magazyna
 
 - `ADMIN` i `BOSS` mają dostęp do raportów,
 - `ACCOUNTANT` ma dostęp do płatności i raportów finansowych,
-- `COURIER` nie ma dostępu do płatności ani raportów finansowych,
+- `SMUGGLER` nie ma dostępu do płatności ani raportów finansowych,
 - `BOSS` może zarządzać magazynami,
 - użytkownik bez odpowiedniej roli nie ma dostępu do modułu raportów.
 
@@ -677,7 +677,7 @@ Osoba 2 odpowiada za walidację:
 - miejsca docelowego,
 - statusu transportu,
 - poziomu ryzyka trasy,
-- przypisanego kuriera.
+- przypisanego przemytnika.
 
 ### Przykładowe reguły walidacji
 
@@ -686,7 +686,8 @@ Osoba 2 odpowiada za walidację:
 - miejsce startowe nie może być puste,
 - miejsce docelowe nie może być puste,
 - poziom ryzyka musi mieścić się w określonym zakresie,
-- pojazd musi zostać przypisany do transportu.
+- pojazd musi zostać przypisany do transportu,
+- przemytnik musi zostać przypisany do transportu.
 
 ---
 
@@ -755,7 +756,7 @@ Osoba 2 odpowiada za przygotowanie:
 - transporty,
 - trasy,
 - pojazdy,
-- przypisanie kurierów,
+- przypisanie przemytników,
 - sortowanie,
 - filtrowanie,
 - bezpieczeństwo modułu transportowego,
@@ -806,7 +807,8 @@ Osoba 3 odpowiada za przygotowanie:
 - pierwszy CRUD transportów,
 - pierwsze widoki transportów,
 - plan sortowania i filtrowania,
-- plan zabezpieczenia modułu transportów.
+- plan zabezpieczenia modułu transportów,
+- plan przypisywania przemytników do transportów.
 
 ### Osoba 3 pokazuje
 
@@ -835,7 +837,7 @@ Osoba 3 odpowiada za przygotowanie:
 - CRUD transportów,
 - CRUD tras,
 - CRUD pojazdów,
-- przypisanie kuriera,
+- przypisanie przemytnika do transportu,
 - sortowanie i filtrowanie,
 - zabezpieczenie modułu transportów,
 - REST API transportów,
@@ -877,3 +879,6 @@ Każda osoba odpowiada za:
 - część dokumentacji,
 - część prezentacji.
 
+Bezpieczeństwo aplikacji zostało podzielone w taki sposób, że Kamil odpowiada za konfigurację podstawową logowania, rejestracji, użytkowników i ról, natomiast pozostali członkowie zespołu odpowiadają za zabezpieczenie swoich modułów biznesowych.
+
+Dzięki temu projekt jest podzielony równomiernie zarówno pod kątem przedmiotu **Systemy baz danych**, jak i pod kątem przedmiotu **Projektowanie aplikacji WWW w języku Java**.
