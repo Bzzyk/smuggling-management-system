@@ -4,18 +4,11 @@
 -- Baza: PostgreSQL
 -- =========================================================
 
--- Uwaga:
--- Projekt ma charakter fikcyjny i edukacyjny.
--- Ten plik zawiera początkowy schemat relacyjnej bazy danych.
-
 -- =========================================================
 -- CZĘŚĆ 1: UŻYTKOWNICY, ROLE, ZLECENIA, HISTORIA ZMIAN
 -- Odpowiedzialny: Kamil Osakowicz
--- =========================================================
 
--- =========================
 -- USERS
--- =========================
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -43,9 +36,9 @@ CREATE TABLE IF NOT EXISTS users (
         CHECK (LENGTH(last_name) BETWEEN 2 AND 80)
 );
 
--- =========================
+
 -- ROLES
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
@@ -57,9 +50,9 @@ CREATE TABLE IF NOT EXISTS roles (
         CHECK (name IN ('ADMIN', 'BOSS', 'SMUGGLER', 'ACCOUNTANT'))
 );
 
--- =========================
+
 -- USER_ROLES
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id INT NOT NULL,
@@ -78,9 +71,8 @@ CREATE TABLE IF NOT EXISTS user_roles (
         ON DELETE CASCADE
 );
 
--- =========================
+
 -- ORDER_STATUSES
--- =========================
 
 CREATE TABLE IF NOT EXISTS order_statuses (
     id SERIAL PRIMARY KEY,
@@ -92,9 +84,9 @@ CREATE TABLE IF NOT EXISTS order_statuses (
         CHECK (name IN ('NOWE', 'W_TRAKCIE', 'ZREALIZOWANE', 'ANULOWANE'))
 );
 
--- =========================
+
 -- ORDERS
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
@@ -131,9 +123,9 @@ CREATE TABLE IF NOT EXISTS orders (
         CHECK (estimated_profit >= 0)
 );
 
--- =========================
+
 -- AUDIT_LOGS
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS audit_logs (
     id SERIAL PRIMARY KEY,
@@ -160,12 +152,12 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 -- =========================================================
 -- CZĘŚĆ 2: TRANSPORTY, TRASY, POJAZDY, PRZYPISANIE PRZEMYTNIKÓW
--- Odpowiedzialny: Osoba 2
+-- Odpowiedzialny: Filip Kamiński
 -- =========================================================
 
--- =========================
+
 -- TRANSPORT_STATUSES
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS transport_statuses (
     id SERIAL PRIMARY KEY,
@@ -177,9 +169,9 @@ CREATE TABLE IF NOT EXISTS transport_statuses (
         CHECK (name IN ('ZAPLANOWANY', 'W_DRODZE', 'DOSTARCZONY', 'NIEUDANY', 'ANULOWANY'))
 );
 
--- =========================
+
 -- ROUTE_DIFFICULTY_LEVELS
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS route_difficulty_levels (
     id SERIAL PRIMARY KEY,
@@ -192,9 +184,8 @@ CREATE TABLE IF NOT EXISTS route_difficulty_levels (
         CHECK (risk_level BETWEEN 1 AND 5)
 );
 
--- =========================
+
 -- ROUTES
--- =========================
 
 CREATE TABLE IF NOT EXISTS routes (
     id SERIAL PRIMARY KEY,
@@ -219,9 +210,9 @@ CREATE TABLE IF NOT EXISTS routes (
         CHECK (distance_km IS NULL OR distance_km > 0)
 );
 
--- =========================
+
 -- VEHICLES
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS vehicles (
     id SERIAL PRIMARY KEY,
@@ -241,9 +232,9 @@ CREATE TABLE IF NOT EXISTS vehicles (
         CHECK (load_capacity > 0)
 );
 
--- =========================
+
 -- TRANSPORTS
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS transports (
     id SERIAL PRIMARY KEY,
@@ -291,10 +282,10 @@ CREATE TABLE IF NOT EXISTS transports (
         )
 );
 
--- =========================
+
 -- SMUGGLER_ASSIGNMENTS
 -- przypisanie przemytników do transportów
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS smuggler_assignments (
     id SERIAL PRIMARY KEY,
@@ -323,12 +314,12 @@ CREATE TABLE IF NOT EXISTS smuggler_assignments (
 
 -- =========================================================
 -- CZĘŚĆ 3: ŁADUNKI, MAGAZYNY, PŁATNOŚCI, RAPORTY
--- Odpowiedzialny: Osoba 3
+-- Odpowiedzialny: Karol Daniło
 -- =========================================================
 
--- =========================
+
 -- CARGO_TYPES
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS cargo_types (
     id SERIAL PRIMARY KEY,
@@ -340,9 +331,9 @@ CREATE TABLE IF NOT EXISTS cargo_types (
         CHECK (name IN ('PAPIEROSY', 'TYTON', 'MIESZANY'))
 );
 
--- =========================
+
 -- WAREHOUSES
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS warehouses (
     id SERIAL PRIMARY KEY,
@@ -362,9 +353,9 @@ CREATE TABLE IF NOT EXISTS warehouses (
         CHECK (max_capacity > 0)
 );
 
--- =========================
+
 -- CARGO
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS cargo (
     id SERIAL PRIMARY KEY,
@@ -411,10 +402,10 @@ CREATE TABLE IF NOT EXISTS cargo (
         CHECK (estimated_value >= 0)
 );
 
--- =========================
+
 -- WAREHOUSE_STOCK
 -- stan magazynowy
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS warehouse_stock (
     id SERIAL PRIMARY KEY,
@@ -442,9 +433,9 @@ CREATE TABLE IF NOT EXISTS warehouse_stock (
         CHECK (quantity > 0)
 );
 
--- =========================
+
 -- PAYMENT_STATUSES
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS payment_statuses (
     id SERIAL PRIMARY KEY,
@@ -456,9 +447,9 @@ CREATE TABLE IF NOT EXISTS payment_statuses (
         CHECK (name IN ('OCZEKUJACA', 'ZAPLACONA', 'ANULOWANA'))
 );
 
--- =========================
+
 -- PAYMENTS
--- =========================
+
 
 CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
@@ -491,9 +482,9 @@ CREATE TABLE IF NOT EXISTS payments (
         CHECK (payment_type IN ('KOSZT', 'PRZYCHOD', 'PROWIZJA'))
 );
 
--- =========================================================
+
 -- INDEKSY
--- =========================================================
+
 
 -- USERS / ROLES / ORDERS
 
@@ -524,7 +515,9 @@ ON audit_logs(table_name, record_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_changed_at
 ON audit_logs(changed_at);
 
+
 -- TRANSPORTS / ROUTES / VEHICLES
+
 
 CREATE INDEX IF NOT EXISTS idx_transports_order_id
 ON transports(order_id);
@@ -553,7 +546,9 @@ ON routes(difficulty_level_id);
 CREATE INDEX IF NOT EXISTS idx_vehicles_registration_number
 ON vehicles(registration_number);
 
+
 -- CARGO / WAREHOUSES / PAYMENTS
+
 
 CREATE INDEX IF NOT EXISTS idx_cargo_type_id
 ON cargo(cargo_type_id);
