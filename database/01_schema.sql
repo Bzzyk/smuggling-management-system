@@ -334,7 +334,7 @@ CREATE TABLE IF NOT EXISTS smuggler_assignments (
 
     CONSTRAINT fk_smuggler_assignments_user
         FOREIGN KEY (smuggler_id)
-        REFERENCES users(id)
+        REFERENCES smuggler_profiles(user_id)
         ON DELETE CASCADE,
 
     CONSTRAINT uq_smuggler_transport
