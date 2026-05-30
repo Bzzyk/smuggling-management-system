@@ -137,3 +137,17 @@ ograniczenia `CHECK` oraz indeksy. Przykladowo:
 Do przechowywania historii zmian przewidziano tabele `audit_logs`. Tabela
 zawiera nazwe zmienionej tabeli, identyfikator rekordu, typ operacji,
 uzytkownika wykonujacego zmiane, date zmiany oraz poprzednia i nowa wartosc.
+
+## Widoki modulu transportowego
+
+W module transportowym przewidziano widoki pomocnicze, ktore ulatwiaja
+wyszukiwanie dostepnych zasobow, przeglad aktywnych transportow oraz wybor
+trasy.
+
+| Widok | Opis |
+|---|---|
+| `v_available_smugglers` | Lista aktywnych przemytnikow, ktorzy nie sa przypisani do aktywnego transportu. |
+| `v_available_vehicles` | Lista pojazdow dostepnych i nieuzywanych w aktywnych transportach. |
+| `v_active_transports` | Lista transportow o statusie `ZAPLANOWANY` lub `W_DRODZE`. |
+| `v_transport_details` | Szczegolowy widok transportu z trasa, pojazdem, statusem i przypisanymi przemytnikami. |
+| `v_route_summary` | Podsumowanie tras z dystansem, poziomem trudnosci i kategoria ryzyka. |
