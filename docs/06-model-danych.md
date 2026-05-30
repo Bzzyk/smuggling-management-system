@@ -47,57 +47,57 @@ ulatwia raportowanie oraz zapewnia spojne relacje przez klucze obce.
 
 ### Role uzytkownikow (`roles`)
 
-| Wartosc      | Znaczenie                                                                       |
-| ------------ | ------------------------------------------------------------------------------- |
-| `ADMIN`      | Administrator systemu zarzadzajacy uzytkownikami i rolami.                     |
-| `BOSS`       | Uzytkownik tworzacy zlecenia, planujacy transporty i przegladajacy raporty.    |
-| `SMUGGLER`   | Uzytkownik przypisywany do transportow.                                         |
-| `ACCOUNTANT` | Uzytkownik odpowiedzialny za platnosci i raporty finansowe.                    |
+| Wartosc      | Znaczenie                                                                   |
+| ------------ | --------------------------------------------------------------------------- |
+| `ADMIN`      | Administrator systemu zarzadzajacy uzytkownikami i rolami.                  |
+| `BOSS`       | Uzytkownik tworzacy zlecenia, planujacy transporty i przegladajacy raporty. |
+| `SMUGGLER`   | Uzytkownik przypisywany do transportow.                                     |
+| `ACCOUNTANT` | Uzytkownik odpowiedzialny za platnosci i raporty finansowe.                 |
 
 ### Statusy zlecen (`order_statuses`)
 
-| Wartosc        | Znaczenie                                                                    |
-| -------------- | ---------------------------------------------------------------------------- |
-| `NOWE`         | Zlecenie zostalo utworzone, ale nie rozpoczeto jeszcze jego realizacji.      |
-| `W_TRAKCIE`    | Zlecenie jest aktualnie realizowane.                                         |
-| `ZREALIZOWANE` | Zlecenie zostalo zakonczone.                                                 |
-| `ANULOWANE`    | Zlecenie zostalo anulowane i nie bedzie dalej realizowane.                   |
+| Wartosc        | Znaczenie                                                               |
+| -------------- | ----------------------------------------------------------------------- |
+| `NOWE`         | Zlecenie zostalo utworzone, ale nie rozpoczeto jeszcze jego realizacji. |
+| `W_TRAKCIE`    | Zlecenie jest aktualnie realizowane.                                    |
+| `ZREALIZOWANE` | Zlecenie zostalo zakonczone.                                            |
+| `ANULOWANE`    | Zlecenie zostalo anulowane i nie bedzie dalej realizowane.              |
 
 ### Statusy transportow (`transport_statuses`)
 
-| Wartosc       | Znaczenie                                                               |
-| ------------- | ----------------------------------------------------------------------- |
-| `ZAPLANOWANY` | Transport zostal zaplanowany, ale nie rozpoczal jeszcze realizacji.     |
-| `W_DRODZE`    | Transport jest aktualnie realizowany.                                   |
-| `DOSTARCZONY` | Transport zakonczyl sie dostarczeniem ladunku.                          |
-| `NIEUDANY`    | Transport zakonczyl sie niepowodzeniem.                                 |
-| `ANULOWANY`   | Transport zostal anulowany przed zakonczeniem.                          |
+| Wartosc       | Znaczenie                                                           |
+| ------------- | ------------------------------------------------------------------- |
+| `ZAPLANOWANY` | Transport zostal zaplanowany, ale nie rozpoczal jeszcze realizacji. |
+| `W_DRODZE`    | Transport jest aktualnie realizowany.                               |
+| `DOSTARCZONY` | Transport zakonczyl sie dostarczeniem ladunku.                      |
+| `NIEUDANY`    | Transport zakonczyl sie niepowodzeniem.                             |
+| `ANULOWANY`   | Transport zostal anulowany przed zakonczeniem.                      |
 
 ### Poziomy trudnosci tras (`route_difficulty_levels`)
 
-| Wartosc         | Poziom ryzyka | Znaczenie                                  |
-| --------------- | ------------: | ------------------------------------------ |
-| `LATWA`         |             1 | Trasa o niskim poziomie ryzyka.            |
-| `STANDARDOWA`   |             2 | Trasa o umiarkowanym poziomie ryzyka.      |
-| `TRUDNA`        |             3 | Trasa wymagajaca doswiadczenia.            |
-| `BARDZO_TRUDNA` |             4 | Trasa o wysokim poziomie ryzyka.           |
-| `EKSTREMALNA`   |             5 | Trasa o najwyzszym poziomie ryzyka.        |
+| Wartosc         | Poziom ryzyka | Znaczenie                             |
+| --------------- | ------------: | ------------------------------------- |
+| `LATWA`         |             1 | Trasa o niskim poziomie ryzyka.       |
+| `STANDARDOWA`   |             2 | Trasa o umiarkowanym poziomie ryzyka. |
+| `TRUDNA`        |             3 | Trasa wymagajaca doswiadczenia.       |
+| `BARDZO_TRUDNA` |             4 | Trasa o wysokim poziomie ryzyka.      |
+| `EKSTREMALNA`   |             5 | Trasa o najwyzszym poziomie ryzyka.   |
 
 ### Typy ladunkow (`cargo_types`)
 
-| Wartosc    | Znaczenie                                                   |
-| ---------- | ----------------------------------------------------------- |
+| Wartosc     | Znaczenie                                                  |
+| ----------- | ---------------------------------------------------------- |
 | `PAPIEROSY` | Ladunek zawierajacy papierosy.                             |
 | `TYTON`     | Ladunek zawierajacy tyton.                                 |
 | `MIESZANY`  | Ladunek mieszany, zawierajacy wiecej niz jeden typ towaru. |
 
 ### Statusy platnosci (`payment_statuses`)
 
-| Wartosc      | Znaczenie                                                                  |
-| ------------ | -------------------------------------------------------------------------- |
-| `OCZEKUJACA` | Platnosc zostala zarejestrowana, ale nie zostala jeszcze zrealizowana.     |
-| `ZAPLACONA`  | Platnosc zostala zrealizowana.                                             |
-| `ANULOWANA`  | Platnosc zostala anulowana.                                                |
+| Wartosc      | Znaczenie                                                              |
+| ------------ | ---------------------------------------------------------------------- |
+| `OCZEKUJACA` | Platnosc zostala zarejestrowana, ale nie zostala jeszcze zrealizowana. |
+| `ZAPLACONA`  | Platnosc zostala zrealizowana.                                         |
+| `ANULOWANA`  | Platnosc zostala anulowana.                                            |
 
 ## Najwazniejsze relacje
 
@@ -144,10 +144,20 @@ W module transportowym przewidziano widoki pomocnicze, ktore ulatwiaja
 wyszukiwanie dostepnych zasobow, przeglad aktywnych transportow oraz wybor
 trasy.
 
-| Widok | Opis |
-|---|---|
-| `v_available_smugglers` | Lista aktywnych przemytnikow, ktorzy nie sa przypisani do aktywnego transportu. |
-| `v_available_vehicles` | Lista pojazdow dostepnych i nieuzywanych w aktywnych transportach. |
-| `v_active_transports` | Lista transportow o statusie `ZAPLANOWANY` lub `W_DRODZE`. |
-| `v_transport_details` | Szczegolowy widok transportu z trasa, pojazdem, statusem i przypisanymi przemytnikami. |
-| `v_route_summary` | Podsumowanie tras z dystansem, poziomem trudnosci i kategoria ryzyka. |
+| Widok                   | Opis                                                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `v_available_smugglers` | Lista aktywnych przemytnikow, ktorzy nie sa przypisani do aktywnego transportu.        |
+| `v_available_vehicles`  | Lista pojazdow dostepnych i nieuzywanych w aktywnych transportach.                     |
+| `v_active_transports`   | Lista transportow o statusie `ZAPLANOWANY` lub `W_DRODZE`.                             |
+| `v_transport_details`   | Szczegolowy widok transportu z trasa, pojazdem, statusem i przypisanymi przemytnikami. |
+| `v_route_summary`       | Podsumowanie tras z dystansem, poziomem trudnosci i kategoria ryzyka.                  |
+
+## Funkcje modulu transportowego
+
+W module transportowym przewidziano funkcje obliczeniowe wykorzystywane przy
+planowaniu i ocenie transportu.
+
+| Funkcja                                               | Opis                                                                                                                          |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `calculate_transport_risk_score(p_transport_id)`      | Oblicza punktowy poziom ryzyka transportu w skali 0-100 na podstawie trasy, dystansu, pojazdu oraz przypisanych przemytnikow. |
+| `estimate_transport_operational_cost(p_transport_id)` | Oblicza szacunkowy koszt operacyjny transportu na potrzeby planowania. Uwzglednia dystans, typ pojazdu, ryzyko trasy oraz doswiadczenie przypisanych przemytnikow. |
