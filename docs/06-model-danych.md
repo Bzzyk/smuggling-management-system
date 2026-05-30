@@ -161,3 +161,14 @@ planowaniu i ocenie transportu.
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `calculate_transport_risk_score(p_transport_id)`      | Oblicza punktowy poziom ryzyka transportu w skali 0-100 na podstawie trasy, dystansu, pojazdu oraz przypisanych przemytnikow. |
 | `estimate_transport_operational_cost(p_transport_id)` | Oblicza szacunkowy koszt operacyjny transportu na potrzeby planowania. Uwzglednia dystans, typ pojazdu, ryzyko trasy oraz doswiadczenie przypisanych przemytnikow. |
+
+## Procedury modulu transportowego
+
+Procedury modulu transportowego obsluguja operacje, ktore powinny byc
+wykonywane razem z kontrola warunkow biznesowych po stronie bazy danych.
+
+| Procedura                                                         | Opis                                                                                                                      |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `assign_smuggler_to_transport(p_transport_id, p_smuggler_id, p_note)` | Przypisuje aktywnego przemytnika do aktywnego transportu. Sprawdza, czy przemytnik nie ma juz innego aktywnego transportu. |
+| `assign_vehicle_to_transport(p_transport_id, p_vehicle_id)`       | Przypisuje dostepny pojazd do aktywnego transportu. Sprawdza, czy pojazd nie jest uzywany w innym aktywnym transporcie.   |
+| `change_transport_status(p_transport_id, p_status_name)`          | Zmienia status transportu na podstawie wartosci ze slownika `transport_statuses`. Pilnuje dozwolonych przejsc statusow oraz wymaga pojazdu i przemytnika przy rozpoczeciu transportu. |
