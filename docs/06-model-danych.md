@@ -172,3 +172,16 @@ wykonywane razem z kontrola warunkow biznesowych po stronie bazy danych.
 | `assign_smuggler_to_transport(p_transport_id, p_smuggler_id, p_note)` | Przypisuje aktywnego przemytnika do aktywnego transportu. Sprawdza, czy przemytnik nie ma juz innego aktywnego transportu. |
 | `assign_vehicle_to_transport(p_transport_id, p_vehicle_id)`       | Przypisuje dostepny pojazd do aktywnego transportu. Sprawdza, czy pojazd nie jest uzywany w innym aktywnym transporcie.   |
 | `change_transport_status(p_transport_id, p_status_name)`          | Zmienia status transportu na podstawie wartosci ze slownika `transport_statuses`. Pilnuje dozwolonych przejsc statusow oraz wymaga pojazdu i przemytnika przy rozpoczeciu transportu. |
+
+## Triggery modulu transportowego
+
+Triggery modulu transportowego automatyzuja techniczne aktualizacje danych oraz
+zabezpieczaja najwazniejsze reguly biznesowe niezaleznie od tego, czy operacja
+zostanie wykonana przez procedure, aplikacje czy reczny SQL.
+
+| Trigger                                                  | Tabela                  | Opis                                                                                                 |
+| -------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `trg_set_transport_updated_at`                           | `transports`            | Ustawia `updated_at` przy kazdej aktualizacji transportu.                                             |
+| `trg_validate_transport_status_change`                   | `transports`            | Pilnuje dozwolonych przejsc statusow transportu oraz wymaga pojazdu i przemytnika przy rozpoczeciu transportu. |
+| `trg_validate_smuggler_assignment`                       | `smuggler_assignments`  | Blokuje aktywne przypisanie przemytnika do transportu innego niz `ZAPLANOWANY` oraz blokuje zajetego lub nieaktywnego przemytnika. |
+| `trg_close_transport_assignments_and_update_stats`       | `transports`            | Po zmianie statusu na `DOSTARCZONY`, `NIEUDANY` albo `ANULOWANY` dezaktywuje przypisania, a dla sukcesu lub porazki aktualizuje statystyki przemytnikow. |
