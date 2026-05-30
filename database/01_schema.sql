@@ -72,6 +72,35 @@ CREATE TABLE IF NOT EXISTS user_roles (
 );
 
 
+-- SMUGGLER_PROFILES
+
+
+CREATE TABLE IF NOT EXISTS smuggler_profiles (
+    user_id INT PRIMARY KEY,
+
+    experience_level VARCHAR(20) NOT NULL,
+    completed_transports_count INT NOT NULL DEFAULT 0,
+    failed_transports_count INT NOT NULL DEFAULT 0,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    notes TEXT,
+
+    CONSTRAINT fk_smuggler_profiles_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_smuggler_experience_level
+        CHECK (experience_level IN ('JUNIOR', 'REGULAR', 'SENIOR', 'EXPERT')),
+
+    CONSTRAINT chk_smuggler_completed_transports
+        CHECK (completed_transports_count >= 0),
+
+    CONSTRAINT chk_smuggler_failed_transports
+        CHECK (failed_transports_count >= 0)
+);
+
+
 -- ORDER_STATUSES
 
 CREATE TABLE IF NOT EXISTS order_statuses (
@@ -539,6 +568,12 @@ ON smuggler_assignments(transport_id);
 
 CREATE INDEX IF NOT EXISTS idx_smuggler_assignments_smuggler_id
 ON smuggler_assignments(smuggler_id);
+
+CREATE INDEX IF NOT EXISTS idx_smuggler_profiles_active
+ON smuggler_profiles(active);
+
+CREATE INDEX IF NOT EXISTS idx_smuggler_profiles_experience_level
+ON smuggler_profiles(experience_level);
 
 CREATE INDEX IF NOT EXISTS idx_routes_difficulty_level_id
 ON routes(difficulty_level_id);
