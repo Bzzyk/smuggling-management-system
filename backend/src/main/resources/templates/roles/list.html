@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Lista ról</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Role Systemowe</h2>
+        <a th:href="@{/users}" class="btn btn-secondary">
+            <i class="bi bi-people"></i> Lista Użytkowników
+        </a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nazwa roli</th>
+                        <th>Opis</th>
+                        <th class="text-end">Akcje</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="role : ${roles}">
+                        <td th:text="${role.id}">1</td>
+                        <td>
+                            <span class="badge bg-info text-dark" th:text="${role.name}">ADMIN</span>
+                        </td>
+                        <td th:text="${role.description}">Opis</td>
+                        <td class="text-end">
+                            <a th:href="@{/roles/{id}/edit(id=${role.id})}" class="btn btn-sm btn-primary" title="Edytuj opis">
+                                <i class="bi bi-pencil"></i> Edytuj
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(roles)}">
+                        <td colspan="4" class="text-center text-muted py-3">Brak ról w systemie.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
