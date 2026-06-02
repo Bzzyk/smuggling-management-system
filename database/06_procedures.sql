@@ -238,3 +238,39 @@ BEGIN
     WHERE id = p_transport_id;
 END;
 $$;
+
+-- add_cargo_to_warehouse: Dodaje ładunek do magazynu (jeśli istnieje, zwiększa ilość)
+CREATE OR REPLACE PROCEDURE add_cargo_to_warehouse(
+    p_warehouse_id INT,
+    p_cargo_id INT,
+    p_quantity INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Użycie mechanizmu UPSERT
+    INSERT INTO warehouse_stock (warehouse_id, cargo_id, quantity)
+    VALUES (p_warehouse_id, p_cargo_id, p_quantity)
+    ON CONFLICT (warehouse_id, cargo_id) 
+    DO UPDATE SET quantity = warehouse_stock.quantity + EXCLUDED.quantity;
+    
+    -- Opcjonalnie: uaktualnienie głównej tabeli cargo
+    UPDATE cargo SET warehouse_id = p_warehouse_id WHERE id = p_cargo_id;
+END;
+$$;
+
+-- register_payment: Szybka rejestracja płatności
+CREATE OR REPLACE PROCEDURE register_payment(
+    p_order_id INT,
+    p_amount NUMERIC,
+    p_payment_type VARCHAR,
+    p_status_id INT,
+    p_description TEXT DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO payments (order_id, amount, payment_type, status_id, payment_date, description)
+    VALUES (p_order_id, p_amount, p_payment_type, p_status_id, CURRENT_DATE, p_description);
+END;
+$$;

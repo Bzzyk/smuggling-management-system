@@ -241,3 +241,78 @@ CREATE TRIGGER trg_close_transport_assignments_and_update_stats
 AFTER UPDATE OF status_id ON transports
 FOR EACH ROW
 EXECUTE FUNCTION close_transport_assignments_and_update_stats();
+
+-- Pojemność magazynu
+CREATE OR REPLACE FUNCTION check_warehouse_capacity_func()
+RETURNS TRIGGER 
+LANGUAGE plpgsql 
+AS $$
+DECLARE
+    v_max_capacity INT;
+    v_current_quantity INT;
+BEGIN
+    -- Sprawdzenie maksymalnej pojemności magazynu
+    SELECT max_capacity INTO v_max_capacity FROM warehouses WHERE id = NEW.warehouse_id;
+    
+    -- Obliczenie aktualnego zapasu z pominięciem edytowanego rekordu (dla UPDATE)
+    SELECT COALESCE(SUM(quantity), 0) INTO v_current_quantity
+    FROM warehouse_stock
+    WHERE warehouse_id = NEW.warehouse_id AND id IS DISTINCT FROM NEW.id;
+    
+    IF (v_current_quantity + NEW.quantity) > v_max_capacity THEN
+        RAISE EXCEPTION 'Błąd: Przekroczono pojemność magazynu. Maksymalna: %, Próba dodania: %', 
+            v_max_capacity, (v_current_quantity + NEW.quantity);
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_check_warehouse_capacity
+BEFORE INSERT OR UPDATE ON warehouse_stock
+FOR EACH ROW EXECUTE FUNCTION check_warehouse_capacity_func();
+
+
+-- Audyt płatności
+
+-- Tabela wymagana do zapisywania audytu płatności
+CREATE TABLE IF NOT EXISTS payments_audit (
+    id SERIAL PRIMARY KEY,
+    payment_id INT NOT NULL,
+    action_type VARCHAR(10) NOT NULL, -- INSERT, UPDATE, DELETE
+    old_status_id INT,
+    new_status_id INT,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION audit_payments_func()
+RETURNS TRIGGER 
+LANGUAGE plpgsql 
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO payments_audit(payment_id, action_type, new_status_id)
+        VALUES (NEW.id, 'INSERT', NEW.status_id);
+        RETURN NEW;
+        
+    ELSIF TG_OP = 'UPDATE' THEN
+        -- Rejestrujemy tylko zmianę statusu, by nie śmiecić w bazie
+        IF OLD.status_id IS DISTINCT FROM NEW.status_id THEN
+            INSERT INTO payments_audit(payment_id, action_type, old_status_id, new_status_id)
+            VALUES (NEW.id, 'UPDATE', OLD.status_id, NEW.status_id);
+        END IF;
+        RETURN NEW;
+        
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO payments_audit(payment_id, action_type, old_status_id)
+        VALUES (OLD.id, 'DELETE', OLD.status_id);
+        RETURN OLD;
+    END IF;
+    
+    RETURN NULL;
+END;
+$$;
+
+CREATE TRIGGER trg_audit_payments
+AFTER INSERT OR UPDATE OR DELETE ON payments
+FOR EACH ROW EXECUTE FUNCTION audit_payments_func();
