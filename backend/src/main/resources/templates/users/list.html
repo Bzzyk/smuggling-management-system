@@ -7,7 +7,7 @@
 <div layout:fragment="content" class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Użytkownicy</h2>
-        <a th:href="@{/roles}" class="btn btn-secondary">
+        <a th:href="@{/roles}" class="btn btn-secondary" sec:authorize="hasRole('ADMIN')">
             <i class="bi bi-shield-lock"></i> Zarządzaj Rolami
         </a>
     </div>
@@ -45,7 +45,7 @@
                             <span th:if="${user.enabled}" class="badge bg-success">Aktywny</span>
                             <span th:unless="${user.enabled}" class="badge bg-danger">Zbanowany</span>
                         </td>
-                        <td class="text-end">
+                        <td class="text-end" sec:authorize="hasRole('ADMIN')">
                             <a th:href="@{/users/{id}/edit(id=${user.id})}" class="btn btn-sm btn-primary" title="Edytuj role">
                                 <i class="bi bi-pencil"></i>
                             </a>
@@ -61,6 +61,9 @@
                                     th:if="${#lists.contains(user.roles.![name], 'ADMIN')}">
                                 <i class="bi bi-shield-fill-x"></i>
                             </button>
+                        </td>
+                        <td class="text-end" sec:authorize="!hasRole('ADMIN')">
+                            <span class="text-muted"><i class="bi bi-dash"></i></span>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(users)}">

@@ -3,6 +3,7 @@ package pl.edu.pb.smuggling.user.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ public class UserController {
         return "users/list";
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/edit")
     public String editUserForm(@PathVariable Integer id, Model model) {
         User user = userService.getUserById(id);
@@ -39,6 +41,7 @@ public class UserController {
         return "users/form";
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/edit")
     public String editUserRoles(@PathVariable Integer id, @RequestParam(required = false) Set<Integer> roleIds, RedirectAttributes redirectAttributes) {
         if (roleIds == null) {
@@ -49,6 +52,7 @@ public class UserController {
         return "redirect:/users";
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/toggle-ban")
     public String toggleBan(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         boolean success = userService.toggleUserBan(id);
