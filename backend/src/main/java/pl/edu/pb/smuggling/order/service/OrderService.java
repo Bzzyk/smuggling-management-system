@@ -8,4 +8,8 @@ import pl.edu.pb.smuggling.order.repository.SmugglingOrderRepository;
 @RequiredArgsConstructor
 public class OrderService {
     private final SmugglingOrderRepository orderRepository;
+
+    public java.util.List<pl.edu.pb.smuggling.order.model.SmugglingOrder> findAll() {
+        return orderRepository.findAll();
+    }
 }

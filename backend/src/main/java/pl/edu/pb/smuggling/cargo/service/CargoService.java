@@ -8,4 +8,8 @@ import pl.edu.pb.smuggling.cargo.repository.CargoRepository;
 @RequiredArgsConstructor
 public class CargoService {
     private final CargoRepository cargoRepository;
+
+    public java.util.List<pl.edu.pb.smuggling.cargo.model.Cargo> findAll() {
+        return cargoRepository.findAll();
+    }
 }

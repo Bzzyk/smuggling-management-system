@@ -2,7 +2,7 @@ package pl.edu.pb.smuggling.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import pl.edu.pb.smuggling.user.service.UserService;
 
 @Controller

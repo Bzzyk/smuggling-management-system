@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Transporty - SMS</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Transporty</h1>
+            
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Data</th>
+                                    <th>Zlecenie</th>
+                                    <th>Status</th>
+                                    <th>Pojazd</th>
+                                    <th>Miejsce startowe</th>
+                                    <th>Miejsce docelowe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="t : ${transports}">
+                                    <td th:text="${t.id}"></td>
+                                    <td th:text="${t.transportDate}"></td>
+                                    <td th:text="${t.order.title}"></td>
+                                    <td th:text="${t.status.name}"></td>
+                                    <td th:text="${t.vehicle != null ? t.vehicle.brand + ' ' + t.vehicle.model : '-'}"></td>
+                                    <td th:text="${t.startLocation}"></td>
+                                    <td th:text="${t.destination}"></td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(transports)}">
+                                    <td colspan="7" class="text-center">Brak transportów w systemie.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+</body>
+</html>

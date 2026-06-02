@@ -8,4 +8,8 @@ import pl.edu.pb.smuggling.cargo.repository.WarehouseRepository;
 @RequiredArgsConstructor
 public class WarehouseService {
     private final WarehouseRepository warehouseRepository;
+
+    public java.util.List<pl.edu.pb.smuggling.cargo.model.Warehouse> findAll() {
+        return warehouseRepository.findAll();
+    }
 }
