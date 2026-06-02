@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Nowy użytkownik</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Zarejestruj nowego użytkownika</h5>
+                    <a th:href="@{/users}" class="btn btn-sm btn-light"><i class="bi bi-arrow-left"></i> Powrót</a>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/users/create}" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label fw-bold">Imię:</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required minlength="2" maxlength="50">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label fw-bold">Nazwisko:</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" required minlength="2" maxlength="80">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label fw-bold">Nazwa użytkownika:</label>
+                            <input type="text" class="form-control" id="username" name="username" required minlength="3" maxlength="50">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">E-mail:</label>
+                            <input type="email" class="form-control" id="email" name="email" required maxlength="120">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rawPassword" class="form-label fw-bold">Hasło początkowe:</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="rawPassword" name="rawPassword" required minlength="5">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye"></i> Pokaż
+                                </button>
+                                <button class="btn btn-outline-primary" type="button" id="generatePassword">
+                                    <i class="bi bi-magic"></i> Generuj
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Przypisane role:</label>
+                            <div class="list-group">
+                                <label class="list-group-item" th:each="role : ${allRoles}">
+                                    <input class="form-check-input me-1" type="checkbox" name="roleIds" th:value="${role.id}">
+                                    <span th:text="${role.name}">ADMIN</span>
+                                    <small class="text-muted d-block ms-4" th:text="${role.description}">Opis roli</small>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success"><i class="bi bi-person-plus"></i> Utwórz konto</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script>
+        document.getElementById('generatePassword').addEventListener('click', function() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let password = '';
+            for (let i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            const pwdInput = document.getElementById('rawPassword');
+            pwdInput.value = password;
+            pwdInput.type = 'text';
+            document.getElementById('togglePassword').innerHTML = '<i class="bi bi-eye-slash"></i> Ukryj';
+        });
+
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const pwdInput = document.getElementById('rawPassword');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                this.innerHTML = '<i class="bi bi-eye-slash"></i> Ukryj';
+            } else {
+                pwdInput.type = 'password';
+                this.innerHTML = '<i class="bi bi-eye"></i> Pokaż';
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

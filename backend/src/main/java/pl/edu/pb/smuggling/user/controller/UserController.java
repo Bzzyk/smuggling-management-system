@@ -43,12 +43,35 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/edit")
-    public String editUserRoles(@PathVariable Integer id, @RequestParam(required = false) Set<Integer> roleIds, RedirectAttributes redirectAttributes) {
+    public String editUser(@PathVariable Integer id, @RequestParam String username, @RequestParam(required = false) Set<Integer> roleIds, RedirectAttributes redirectAttributes) {
         if (roleIds == null) {
             roleIds = Set.of();
         }
-        userService.updateUserRoles(id, roleIds);
-        redirectAttributes.addFlashAttribute("success", "Zaktualizowano role użytkownika.");
+        userService.updateUser(id, username, roleIds);
+        redirectAttributes.addFlashAttribute("success", "Zaktualizowano dane użytkownika.");
+        return "redirect:/users";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/create")
+    public String createUserForm(Model model) {
+        model.addAttribute("user", new User());
+        model.addAttribute("allRoles", roleService.getAllRoles());
+        return "users/create";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/create")
+    public String createUser(User user, @RequestParam String rawPassword, @RequestParam(required = false) Set<Integer> roleIds, RedirectAttributes redirectAttributes) {
+        if (roleIds == null) {
+            roleIds = Set.of();
+        }
+        boolean success = userService.registerUser(user, rawPassword, roleIds);
+        if (success) {
+            redirectAttributes.addFlashAttribute("success", "Zarejestrowano nowego użytkownika.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Nazwa użytkownika jest już zajęta.");
+        }
         return "redirect:/users";
     }
 
@@ -61,6 +84,14 @@ public class UserController {
         } else {
             redirectAttributes.addFlashAttribute("error", "Nie można zbanować administratora.");
         }
+        return "redirect:/users";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/reset-password")
+    public String resetPassword(@PathVariable Integer id, @RequestParam String newPassword, RedirectAttributes redirectAttributes) {
+        userService.resetPassword(id, newPassword);
+        redirectAttributes.addFlashAttribute("success", "Hasło użytkownika zostało zresetowane.");
         return "redirect:/users";
     }
 }

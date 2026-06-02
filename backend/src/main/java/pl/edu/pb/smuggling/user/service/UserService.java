@@ -60,13 +60,35 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUserRoles(Integer userId, Set<Integer> roleIds) {
+    public void resetPassword(Integer userId, String newPassword) {
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
+            user.setPasswordHash(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+        }
+    }
+
+    @Transactional
+    public void updateUser(Integer userId, String newUsername, Set<Integer> roleIds) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            user.setUsername(newUsername);
             Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
             user.setRoles(roles);
             userRepository.save(user);
         }
+    }
+
+    @Transactional
+    public boolean registerUser(User user, String rawPassword, Set<Integer> roleIds) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            return false;
+        }
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
+        user.setRoles(roles);
+        userRepository.save(user);
+        return true;
     }
 
     @Transactional
