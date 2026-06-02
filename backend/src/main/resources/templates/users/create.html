@@ -13,38 +13,43 @@
                     <a th:href="@{/users}" class="btn btn-sm btn-light"><i class="bi bi-arrow-left"></i> Powrót</a>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/users/create}" method="post">
+                    <form th:action="@{/users/create}" method="post" th:object="${request}">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="firstName" class="form-label fw-bold">Imię:</label>
-                                <input type="text" class="form-control" id="firstName" name="firstName" required minlength="2" maxlength="50">
+                                <input type="text" class="form-control" id="firstName" th:field="*{firstName}" th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''">
+                                <div th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}" class="invalid-feedback"></div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="lastName" class="form-label fw-bold">Nazwisko:</label>
-                                <input type="text" class="form-control" id="lastName" name="lastName" required minlength="2" maxlength="80">
+                                <input type="text" class="form-control" id="lastName" th:field="*{lastName}" th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''">
+                                <div th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" class="invalid-feedback"></div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <label for="username" class="form-label fw-bold">Nazwa użytkownika:</label>
-                            <input type="text" class="form-control" id="username" name="username" required minlength="3" maxlength="50">
+                            <input type="text" class="form-control" id="username" th:field="*{username}" th:classappend="${#fields.hasErrors('username')} ? 'is-invalid' : ''">
+                            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="invalid-feedback"></div>
                         </div>
 
                         <div class="mb-3">
                             <label for="email" class="form-label fw-bold">E-mail:</label>
-                            <input type="email" class="form-control" id="email" name="email" required maxlength="120">
+                            <input type="text" class="form-control" id="email" th:field="*{email}" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''">
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="invalid-feedback"></div>
                         </div>
 
                         <div class="mb-3">
                             <label for="rawPassword" class="form-label fw-bold">Hasło początkowe:</label>
                             <div class="input-group">
-                                <input type="password" class="form-control" id="rawPassword" name="rawPassword" required minlength="5">
+                                <input type="password" class="form-control" id="rawPassword" th:field="*{rawPassword}" th:classappend="${#fields.hasErrors('rawPassword')} ? 'is-invalid' : ''">
                                 <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                     <i class="bi bi-eye"></i> Pokaż
                                 </button>
                                 <button class="btn btn-outline-primary" type="button" id="generatePassword">
                                     <i class="bi bi-magic"></i> Generuj
                                 </button>
+                                <div th:if="${#fields.hasErrors('rawPassword')}" th:errors="*{rawPassword}" class="invalid-feedback"></div>
                             </div>
                         </div>
 

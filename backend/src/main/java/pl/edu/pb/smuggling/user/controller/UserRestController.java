@@ -16,8 +16,10 @@ import pl.edu.pb.smuggling.user.model.dto.UserCreateRequest;
 import pl.edu.pb.smuggling.user.model.dto.UserUpdateRequest;
 import pl.edu.pb.smuggling.user.model.dto.PasswordResetRequest;
 import pl.edu.pb.smuggling.user.service.UserService;
+import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,7 +47,7 @@ public class UserRestController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserCreateRequest request) {
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserCreateRequest request) {
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -64,13 +66,14 @@ public class UserRestController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable Integer id, @RequestBody UserUpdateRequest request) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Integer id, @Valid @RequestBody UserUpdateRequest request) {
         User existingUser = userService.getUserById(id);
         if (existingUser == null) {
             return ResponseEntity.notFound().build();
         }
         
-        userService.updateUser(id, request.getUsername(), request.getFirstName(), request.getLastName(), request.getEmail(), request.getRoleIds());
+        Set<Integer> roleIds = request.getRoleIds() != null ? request.getRoleIds() : Set.of();
+        userService.updateUser(id, request.getUsername(), request.getFirstName(), request.getLastName(), request.getEmail(), roleIds);
         
         User updatedUser = userService.getUserById(id);
         return ResponseEntity.ok(UserDto.fromEntity(updatedUser));
@@ -89,7 +92,7 @@ public class UserRestController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/reset-password")
-    public ResponseEntity<Void> resetPassword(@PathVariable Integer id, @RequestBody PasswordResetRequest request) {
+    public ResponseEntity<Void> resetPassword(@PathVariable Integer id, @Valid @RequestBody PasswordResetRequest request) {
         User existingUser = userService.getUserById(id);
         if (existingUser == null) {
             return ResponseEntity.notFound().build();
