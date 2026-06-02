@@ -213,3 +213,33 @@ SELECT
 FROM routes r
 JOIN route_difficulty_levels rdl
     ON rdl.id = r.difficulty_level_id;
+
+-- v_warehouse_stock: Pokazuje aktualny stan magazynów ze szczegółami ładunku
+CREATE OR REPLACE VIEW v_warehouse_stock AS
+SELECT 
+    ws.id AS stock_id,
+    w.name AS warehouse_name,
+    w.location,
+    c.name AS cargo_name,
+    ct.name AS cargo_type,
+    ws.quantity,
+    c.estimated_value,
+    ws.added_at
+FROM warehouse_stock ws
+JOIN warehouses w ON ws.warehouse_id = w.id
+JOIN cargo c ON ws.cargo_id = c.id
+JOIN cargo_types ct ON c.cargo_type_id = ct.id;
+
+-- v_profit_report: Raport zysków i kosztów dla poszczególnych zleceń
+CREATE OR REPLACE VIEW v_profit_report AS
+SELECT 
+    p.order_id,
+    SUM(CASE WHEN p.payment_type = 'PRZYCHOD' THEN p.amount ELSE 0 END) AS total_revenue,
+    SUM(CASE WHEN p.payment_type IN ('KOSZT', 'PROWIZJA') THEN p.amount ELSE 0 END) AS total_costs,
+    -- Zysk netto (Przychody - Koszty - Prowizje) z opłaconych płatności
+    SUM(CASE WHEN p.payment_type = 'PRZYCHOD' THEN p.amount ELSE 0 END) -
+    SUM(CASE WHEN p.payment_type IN ('KOSZT', 'PROWIZJA') THEN p.amount ELSE 0 END) AS net_profit
+FROM payments p
+JOIN payment_statuses ps ON p.status_id = ps.id
+WHERE ps.name = 'ZAPLACONA'
+GROUP BY p.order_id;

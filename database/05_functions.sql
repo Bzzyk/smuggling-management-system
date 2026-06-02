@@ -191,3 +191,39 @@ BEGIN
     RETURN ROUND(v_result, 2);
 END;
 $$;
+
+-- calculate_cargo_value: Zwraca szacowaną wartość ładunku na podstawie jego ID
+CREATE OR REPLACE FUNCTION calculate_cargo_value(p_cargo_id INT)
+RETURNS NUMERIC(12, 2) 
+LANGUAGE plpgsql 
+AS $$
+DECLARE
+    v_value NUMERIC(12, 2);
+BEGIN
+    SELECT estimated_value INTO v_value 
+    FROM cargo 
+    WHERE id = p_cargo_id;
+    
+    RETURN COALESCE(v_value, 0.00);
+END;
+$$;
+
+-- calculate_order_profit: Oblicza zysk ze zlecenia (tylko opłacone transakcje)
+CREATE OR REPLACE FUNCTION calculate_order_profit(p_order_id INT)
+RETURNS NUMERIC(12, 2) 
+LANGUAGE plpgsql 
+AS $$
+DECLARE
+    v_profit NUMERIC(12, 2);
+BEGIN
+    SELECT 
+        COALESCE(SUM(CASE WHEN payment_type = 'PRZYCHOD' THEN amount ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN payment_type IN ('KOSZT', 'PROWIZJA') THEN amount ELSE 0 END), 0)
+    INTO v_profit
+    FROM payments p
+    JOIN payment_statuses ps ON p.status_id = ps.id
+    WHERE p.order_id = p_order_id AND ps.name = 'ZAPLACONA';
+    
+    RETURN v_profit;
+END;
+$$;
