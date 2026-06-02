@@ -69,12 +69,21 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(Integer userId, String newUsername, Set<Integer> roleIds) {
+    public void updateUser(Integer userId, String newUsername, String firstName, String lastName, String email, Set<Integer> roleIds) {
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
             user.setUsername(newUsername);
-            Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
-            user.setRoles(roles);
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setEmail(email);
+
+            boolean isAdmin = user.getRoles().stream()
+                    .anyMatch(role -> role.getName().equals("ADMIN"));
+
+            if (!isAdmin) {
+                Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
+                user.setRoles(roles);
+            }
             userRepository.save(user);
         }
     }

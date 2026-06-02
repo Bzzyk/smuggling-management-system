@@ -18,26 +18,26 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+        private final UserRepository userRepository;
 
-    @Override
-    @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika: " + username));
+        @Override
+        @Transactional(readOnly = true)
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new UsernameNotFoundException(
+                                                "Nie znaleziono użytkownika: " + username));
 
-        Collection<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
-                .collect(Collectors.toList());
+                Collection<GrantedAuthority> authorities = user.getRoles().stream()
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                                .collect(Collectors.toList());
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPasswordHash(),
-                user.isEnabled(),
-                true,
-                true,
-                true,
-                authorities
-        );
-    }
+                return new org.springframework.security.core.userdetails.User(
+                                user.getUsername(),
+                                user.getPasswordHash(),
+                                user.isEnabled(),
+                                true,
+                                true,
+                                true,
+                                authorities);
+        }
 }

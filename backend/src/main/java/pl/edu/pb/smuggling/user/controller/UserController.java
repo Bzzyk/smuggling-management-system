@@ -43,11 +43,11 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/edit")
-    public String editUser(@PathVariable Integer id, @RequestParam String username, @RequestParam(required = false) Set<Integer> roleIds, RedirectAttributes redirectAttributes) {
+    public String editUser(@PathVariable Integer id, @RequestParam String username, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String email, @RequestParam(required = false) Set<Integer> roleIds, RedirectAttributes redirectAttributes) {
         if (roleIds == null) {
             roleIds = Set.of();
         }
-        userService.updateUser(id, username, roleIds);
+        userService.updateUser(id, username, firstName, lastName, email, roleIds);
         redirectAttributes.addFlashAttribute("success", "Zaktualizowano dane użytkownika.");
         return "redirect:/users";
     }

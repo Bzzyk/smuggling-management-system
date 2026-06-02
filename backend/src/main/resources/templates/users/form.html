@@ -13,13 +13,26 @@
                     <a th:href="@{/users}" class="btn btn-sm btn-light"><i class="bi bi-arrow-left"></i> Powrót</a>
                 </div>
                 <div class="card-body">
-                    <p><strong>Użytkownik:</strong> <span th:text="${user.firstName + ' ' + user.lastName}">Jan Kowalski</span></p>
-                    <hr>
-                    
                     <form th:action="@{/users/{id}/edit(id=${user.id})}" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label fw-bold">Imię:</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" th:value="${user.firstName}" required minlength="2" maxlength="50">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label fw-bold">Nazwisko:</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" th:value="${user.lastName}" required minlength="2" maxlength="80">
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="username" class="form-label fw-bold">Nazwa użytkownika:</label>
                             <input type="text" class="form-control" id="username" name="username" th:value="${user.username}" required minlength="3" maxlength="50">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">E-mail:</label>
+                            <input type="email" class="form-control" id="email" name="email" th:value="${user.email}" required maxlength="120">
                         </div>
 
                         <div class="mb-3">
@@ -28,10 +41,14 @@
                                 <label class="list-group-item" th:each="role : ${allRoles}">
                                     <input class="form-check-input me-1" type="checkbox" name="roleIds"
                                            th:value="${role.id}"
-                                           th:checked="${#lists.contains(user.roles.![id], role.id)}">
+                                           th:checked="${#lists.contains(user.roles.![id], role.id)}"
+                                           th:disabled="${#lists.contains(user.roles.![name], 'ADMIN')}">
                                     <span th:text="${role.name}">ADMIN</span>
                                     <small class="text-muted d-block ms-4" th:text="${role.description}">Opis roli</small>
                                 </label>
+                            </div>
+                            <div th:if="${#lists.contains(user.roles.![name], 'ADMIN')}" class="alert alert-warning mt-2 mb-0 py-2">
+                                <i class="bi bi-info-circle"></i> Edycja ról zablokowana. Nie można modyfikować uprawnień administratorów.
                             </div>
                         </div>
                         
