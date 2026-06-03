@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
         ON DELETE SET NULL,
 
     CONSTRAINT chk_audit_logs_action
-        CHECK (action IN ('INSERT', 'UPDATE', 'DELETE'))
+        CHECK (action IS NOT NULL)
 );
 
 -- =========================================================
