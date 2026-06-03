@@ -179,6 +179,31 @@ CREATE TABLE IF NOT EXISTS audit_logs (
         CHECK (action IS NOT NULL)
 );
 
+
+-- AUTH_LOGS
+
+
+CREATE TABLE IF NOT EXISTS auth_logs (
+    id SERIAL PRIMARY KEY,
+
+    user_id INT,
+    username VARCHAR(50),
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(255),
+    status VARCHAR(20) NOT NULL,
+    
+    attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_auth_logs_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE SET NULL,
+
+    CONSTRAINT chk_auth_logs_status
+        CHECK (status IN ('SUCCESS', 'FAILURE', 'LOGOUT'))
+);
+
+
 -- =========================================================
 -- CZĘŚĆ 2: TRANSPORTY, TRASY, POJAZDY, PRZYPISANIE PRZEMYTNIKÓW
 -- Odpowiedzialny: Filip Kamiński
