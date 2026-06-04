@@ -9,5 +9,6 @@ import pl.edu.pb.smuggling.payment.service.PaymentService;
 @RequestMapping("/payments")
 @RequiredArgsConstructor
 public class PaymentController {
+    @SuppressWarnings("unused")
     private final PaymentService paymentService;
 }

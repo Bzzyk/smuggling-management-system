@@ -7,5 +7,6 @@ import pl.edu.pb.smuggling.payment.repository.PaymentRepository;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
+    @SuppressWarnings("unused")
     private final PaymentRepository paymentRepository;
 }

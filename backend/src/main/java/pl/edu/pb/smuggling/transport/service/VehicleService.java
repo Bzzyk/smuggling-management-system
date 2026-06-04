@@ -7,13 +7,18 @@ import pl.edu.pb.smuggling.transport.dto.VehicleFormDto;
 import pl.edu.pb.smuggling.transport.model.Vehicle;
 import pl.edu.pb.smuggling.transport.repository.VehicleRepository;
 
+import pl.edu.pb.smuggling.common.service.AuditLogService;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final AuditLogService auditLogService;
 
     public List<Vehicle> getAllVehicles() {
         return vehicleRepository.findAll();
@@ -32,7 +37,8 @@ public class VehicleService {
 
         Vehicle vehicle = new Vehicle();
         updateVehicleFromDto(vehicle, dto);
-        vehicleRepository.save(vehicle);
+        vehicle = vehicleRepository.save(vehicle);
+        auditLogService.logAction("vehicles", vehicle.getId(), "CREATE", null, vehicleToMap(vehicle));
     }
 
     @Transactional
@@ -47,15 +53,18 @@ public class VehicleService {
                     }
                 });
 
+        Map<String, Object> oldState = vehicleToMap(vehicle);
         updateVehicleFromDto(vehicle, dto);
         vehicleRepository.save(vehicle);
+        auditLogService.logAction("vehicles", vehicle.getId(), "UPDATE", oldState, vehicleToMap(vehicle));
     }
 
     @Transactional
     public void deleteVehicle(Integer id) {
         Vehicle vehicle = getVehicleById(id);
-        // FIXME: w przyszłosci moze dodac walidację przed usunieciem gdy jest przypisany do transportu
+        Map<String, Object> oldState = vehicleToMap(vehicle);
         vehicleRepository.delete(vehicle);
+        auditLogService.logAction("vehicles", vehicle.getId(), "DELETE", oldState, null);
     }
 
     private void updateVehicleFromDto(Vehicle vehicle, VehicleFormDto dto) {
@@ -65,5 +74,17 @@ public class VehicleService {
         vehicle.setVehicleType(dto.getVehicleType());
         vehicle.setLoadCapacity(dto.getLoadCapacity());
         vehicle.setAvailable(dto.getAvailable());
+    }
+
+    private Map<String, Object> vehicleToMap(Vehicle vehicle) {
+        if (vehicle == null) return null;
+        Map<String, Object> map = new HashMap<>();
+        map.put("registrationNumber", vehicle.getRegistrationNumber());
+        map.put("brand", vehicle.getBrand());
+        map.put("model", vehicle.getModel());
+        map.put("vehicleType", vehicle.getVehicleType());
+        map.put("loadCapacity", vehicle.getLoadCapacity());
+        map.put("available", vehicle.getAvailable());
+        return map;
     }
 }

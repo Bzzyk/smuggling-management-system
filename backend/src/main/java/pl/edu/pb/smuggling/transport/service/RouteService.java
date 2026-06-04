@@ -9,7 +9,11 @@ import pl.edu.pb.smuggling.transport.model.RouteDifficultyLevel;
 import pl.edu.pb.smuggling.transport.repository.RouteDifficultyLevelRepository;
 import pl.edu.pb.smuggling.transport.repository.RouteRepository;
 
+import pl.edu.pb.smuggling.common.service.AuditLogService;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +21,7 @@ public class RouteService {
 
     private final RouteRepository routeRepository;
     private final RouteDifficultyLevelRepository difficultyLevelRepository;
+    private final AuditLogService auditLogService;
 
     public List<Route> getAllRoutes() {
         return routeRepository.findAll();
@@ -39,7 +44,8 @@ public class RouteService {
 
         Route route = new Route();
         updateRouteFromDto(route, dto);
-        routeRepository.save(route);
+        route = routeRepository.save(route);
+        auditLogService.logAction("routes", route.getId(), "CREATE", null, routeToMap(route));
     }
 
     @Transactional
@@ -50,14 +56,18 @@ public class RouteService {
             throw new IllegalArgumentException("Trasa o takiej nazwie już istnieje w systemie");
         }
 
+        Map<String, Object> oldState = routeToMap(route);
         updateRouteFromDto(route, dto);
         routeRepository.save(route);
+        auditLogService.logAction("routes", route.getId(), "UPDATE", oldState, routeToMap(route));
     }
 
     @Transactional
     public void deleteRoute(Integer id) {
         Route route = getRouteById(id);
+        Map<String, Object> oldState = routeToMap(route);
         routeRepository.delete(route);
+        auditLogService.logAction("routes", route.getId(), "DELETE", oldState, null);
     }
 
     private void updateRouteFromDto(Route route, RouteFormDto dto) {
@@ -70,5 +80,17 @@ public class RouteService {
         RouteDifficultyLevel difficulty = difficultyLevelRepository.findById(dto.getDifficultyLevelId())
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono poziomu trudności"));
         route.setDifficultyLevel(difficulty);
+    }
+
+    private Map<String, Object> routeToMap(Route route) {
+        if (route == null) return null;
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", route.getName());
+        map.put("startPoint", route.getStartPoint());
+        map.put("endPoint", route.getEndPoint());
+        map.put("distanceKm", route.getDistanceKm());
+        map.put("description", route.getDescription());
+        map.put("difficultyLevel", route.getDifficultyLevel() != null ? route.getDifficultyLevel().getName() : null);
+        return map;
     }
 }

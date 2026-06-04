@@ -12,7 +12,9 @@ import pl.edu.pb.smuggling.user.repository.RoleRepository;
 import pl.edu.pb.smuggling.user.repository.UserRepository;
 import pl.edu.pb.smuggling.common.service.AuditLogService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -76,16 +78,22 @@ public class UserService {
     public void updateUser(Integer userId, String newUsername, String firstName, String lastName, String email, Set<Integer> roleIds) {
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
-            String oldProfile = String.format("{\"username\": \"%s\", \"email\": \"%s\", \"firstName\": \"%s\", \"lastName\": \"%s\"}", 
-                    user.getUsername(), user.getEmail(), user.getFirstName(), user.getLastName());
+            Map<String, Object> oldProfile = new HashMap<>();
+            oldProfile.put("username", user.getUsername());
+            oldProfile.put("email", user.getEmail());
+            oldProfile.put("firstName", user.getFirstName());
+            oldProfile.put("lastName", user.getLastName());
 
             user.setUsername(newUsername);
             user.setFirstName(firstName);
             user.setLastName(lastName);
             user.setEmail(email);
 
-            String newProfile = String.format("{\"username\": \"%s\", \"email\": \"%s\", \"firstName\": \"%s\", \"lastName\": \"%s\"}", 
-                    newUsername, email, firstName, lastName);
+            Map<String, Object> newProfile = new HashMap<>();
+            newProfile.put("username", newUsername);
+            newProfile.put("email", email);
+            newProfile.put("firstName", firstName);
+            newProfile.put("lastName", lastName);
                     
             if (!oldProfile.equals(newProfile)) {
                 auditLogService.logAction("users", userId, "UPDATE_PROFILE", oldProfile, newProfile);
@@ -95,9 +103,9 @@ public class UserService {
                     .anyMatch(role -> role.getName().equals("ADMIN"));
 
             if (!isAdmin) {
-                String oldRoles = user.getRoles().stream().map(Role::getName).collect(Collectors.toList()).toString();
+                List<String> oldRoles = user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
                 Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
-                String newRoles = roles.stream().map(Role::getName).collect(Collectors.toList()).toString();
+                List<String> newRoles = roles.stream().map(Role::getName).collect(Collectors.toList());
                 
                 if (!oldRoles.equals(newRoles)) {
                     auditLogService.logAction("users", userId, "UPDATE_ROLES", oldRoles, newRoles);
@@ -118,7 +126,10 @@ public class UserService {
         user.setRoles(roles);
         userRepository.save(user);
         
-        String newProfile = String.format("{\"username\": \"%s\", \"email\": \"%s\"}", user.getUsername(), user.getEmail());
+        Map<String, Object> newProfile = new HashMap<>();
+        newProfile.put("username", user.getUsername());
+        newProfile.put("email", user.getEmail());
+        
         auditLogService.logAction("users", user.getId(), "CREATE_USER", null, newProfile);
         
         return true;
@@ -138,9 +149,13 @@ public class UserService {
             user.setEnabled(!oldStatus);
             userRepository.save(user);
             
-            auditLogService.logAction("users", userId, oldStatus ? "BAN_USER" : "UNBAN_USER", 
-                    String.format("{\"enabled\": %b}", oldStatus), 
-                    String.format("{\"enabled\": %b}", !oldStatus));
+            Map<String, Object> oldState = new HashMap<>();
+            oldState.put("enabled", oldStatus);
+            
+            Map<String, Object> newState = new HashMap<>();
+            newState.put("enabled", !oldStatus);
+            
+            auditLogService.logAction("users", userId, oldStatus ? "BAN_USER" : "UNBAN_USER", oldState, newState);
                     
             return true;
         }

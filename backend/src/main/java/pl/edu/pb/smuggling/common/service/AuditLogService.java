@@ -1,5 +1,6 @@
 package pl.edu.pb.smuggling.common.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,25 @@ public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
     private final UserRepository userRepository;
+    private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
+    @Transactional
+    public void logAction(String tableName, Integer recordId, String action, Object oldValueObj, Object newValueObj) {
+        String oldValueStr = null;
+        String newValueStr = null;
+        try {
+            if (oldValueObj != null) {
+                oldValueStr = oldValueObj instanceof String ? (String) oldValueObj : objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(oldValueObj);
+            }
+            if (newValueObj != null) {
+                newValueStr = newValueObj instanceof String ? (String) newValueObj : objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(newValueObj);
+            }
+        } catch (Exception e) {
+            oldValueStr = oldValueObj != null ? oldValueObj.toString() : null;
+            newValueStr = newValueObj != null ? newValueObj.toString() : null;
+        }
+        logAction(tableName, recordId, action, oldValueStr, newValueStr);
+    }
 
     @Transactional
     public void logAction(String tableName, Integer recordId, String action, String oldValue, String newValue) {

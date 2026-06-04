@@ -1,46 +1,83 @@
 <!DOCTYPE html>
-<html lang="pl" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragments/layout}">
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Zlecenia - SMS</title>
+    <title>Zarządzanie Zleceniami</title>
 </head>
 <body>
 <div layout:fragment="content" class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Zlecenia</h1>
-            
-            <div class="card shadow">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Tytuł</th>
-                                    <th>Data planowana</th>
-                                    <th>Status</th>
-                                    <th>Utworzył</th>
-                                    <th>Odpowiedzialny</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="order : ${orders}">
-                                    <td th:text="${order.id}"></td>
-                                    <td th:text="${order.title}"></td>
-                                    <td th:text="${order.plannedDate}"></td>
-                                    <td th:text="${order.status.name}"></td>
-                                    <td th:text="${order.createdBy.username}"></td>
-                                    <td th:text="${order.responsibleUser != null ? order.responsibleUser.username : '-'}"></td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(orders)}">
-                                    <td colspan="6" class="text-center">Brak zleceń w systemie.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="row mb-3 align-items-center">
+        <div class="col">
+            <h2>Zlecenia Operacyjne</h2>
+        </div>
+        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+            <a th:href="@{/orders/create}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Dodaj Nowe Zlecenie</a>
+        </div>
+    </div>
+
+    <!-- Alerty -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i>
+        <span th:text="${successMessage}">Sukces</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Tytuł Zlecenia</th>
+                            <th scope="col">Data planowana</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Odpowiedzialny</th>
+                            <th scope="col">Szacowany zysk</th>
+                            <th scope="col" class="text-end">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${orders}">
+                            <td>
+                                <strong th:text="${order.title}">Tytuł Zlecenia</strong>
+                            </td>
+                            <td>
+                                <i class="bi bi-calendar-event text-muted me-1"></i>
+                                <span th:text="${order.plannedDate != null ? order.plannedDate : '-'}">Data</span>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${order.status.name == 'ZREALIZOWANE' ? 'bg-success' : (order.status.name == 'PLANOWANE' ? 'bg-info text-dark' : (order.status.name == 'W_TRAKCIE' ? 'bg-primary' : 'bg-danger'))}"
+                                      th:text="${order.status.name}">STATUS</span>
+                            </td>
+                            <td>
+                                <span th:if="${order.responsibleUser != null}">
+                                    <i class="bi bi-person-badge text-muted me-1"></i>
+                                    <span th:text="${order.responsibleUser.firstName + ' ' + order.responsibleUser.lastName}">Kowalski</span>
+                                </span>
+                                <span th:if="${order.responsibleUser == null}" class="text-muted fst-italic">Brak</span>
+                            </td>
+                            <td>
+                                <span th:if="${order.estimatedProfit != null and order.estimatedProfit > 0}" class="text-success fw-bold">
+                                    $<span th:text="${order.estimatedProfit}">0.00</span>
+                                </span>
+                                <span th:if="${order.estimatedProfit == null or order.estimatedProfit == 0}" class="text-muted fst-italic">-</span>
+                            </td>
+                            <td class="text-end">
+                                <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-sm btn-outline-info" title="Szczegóły i etapy logistyczne">
+                                    <i class="bi bi-eye"></i> Panel Zlecenia
+                                </a>
+                                <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:href="@{/orders/{id}/edit(id=${order.id})}" class="btn btn-sm btn-outline-primary" title="Edytuj zlecenie">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(orders)}">
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-info-circle"></i> Brak zleceń w systemie. Utwórz pierwsze.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            
         </div>
     </div>
 </div>
