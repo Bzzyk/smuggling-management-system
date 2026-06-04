@@ -54,6 +54,24 @@
             </div>
         </div>
     </div>
+    
+    <!-- Paginacja -->
+    <nav th:if="${totalPages > 1}" aria-label="Nawigacja paginacji" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/audit-logs(page=${currentPage - 1})}" tabindex="-1">Poprzednia</a>
+            </li>
+            
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link" th:href="@{/audit-logs(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/audit-logs(page=${currentPage + 1})}">Następna</a>
+            </li>
+        </ul>
+    </nav>
 </div>
 </body>
 </html>
