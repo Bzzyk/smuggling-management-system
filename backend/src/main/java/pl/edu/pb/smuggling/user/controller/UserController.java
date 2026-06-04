@@ -28,6 +28,7 @@ public class UserController {
     private final UserService userService;
     private final RoleService roleService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public String listUsers(Model model) {
         model.addAttribute("users", userService.getAllUsers());
