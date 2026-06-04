@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="${paymentForm.id == null ? 'Nowa płatność' : 'Edycja płatności'}">Płatność</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cash-coin me-2"></i>
+                        <span th:text="${paymentForm.id == null ? 'Nowa płatność' : 'Edycja płatności'}">Płatność</span>
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="${paymentForm.id == null ? '/payments/create' : '/payments/' + paymentForm.id + '/edit'}"
+                          th:object="${paymentForm}" method="post">
+
+                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger">
+                            <div th:if="${#fields.hasGlobalErrors()}">
+                                <ul class="mb-0">
+                                    <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">Błąd ogólny</li>
+                                </ul>
+                            </div>
+                            <div th:unless="${#fields.hasGlobalErrors()}">
+                                Upewnij się, że poprawnie wypełniłeś wszystkie wymagane pola.
+                            </div>
+                        </div>
+
+                        <input type="hidden" th:field="*{id}">
+
+                        <div class="mb-3">
+                            <label for="orderId" class="form-label fw-bold">Zlecenie</label>
+                            <select class="form-select" id="orderId" th:field="*{orderId}"
+                                    th:classappend="${#fields.hasErrors('orderId')} ? 'is-invalid' : ''" required>
+                                <option value="" disabled selected>Wybierz zlecenie...</option>
+                                <option th:each="order : ${orders}" th:value="${order.id}" th:text="${order.title}"></option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('orderId')}" th:errors="*{orderId}">Błąd zlecenia</div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="paymentType" class="form-label fw-bold">Typ płatności</label>
+                                <select class="form-select" id="paymentType" th:field="*{paymentType}"
+                                        th:classappend="${#fields.hasErrors('paymentType')} ? 'is-invalid' : ''" required>
+                                    <option value="" disabled selected>Wybierz typ...</option>
+                                    <option th:each="type : ${paymentTypes}" th:value="${type}" th:text="${type}"></option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('paymentType')}" th:errors="*{paymentType}">Błąd typu</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="statusId" class="form-label fw-bold">Status</label>
+                                <select class="form-select" id="statusId" th:field="*{statusId}"
+                                        th:classappend="${#fields.hasErrors('statusId')} ? 'is-invalid' : ''" required>
+                                    <option value="" disabled selected>Wybierz status...</option>
+                                    <option th:each="status : ${statuses}" th:value="${status.id}" th:text="${status.name}"></option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('statusId')}" th:errors="*{statusId}">Błąd statusu</div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="amount" class="form-label fw-bold">Kwota</label>
+                                <div class="input-group" th:classappend="${#fields.hasErrors('amount')} ? 'has-validation' : ''">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="amount" th:field="*{amount}"
+                                           th:classappend="${#fields.hasErrors('amount')} ? 'is-invalid' : ''" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}">Błąd kwoty</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="paymentDate" class="form-label fw-bold">Data płatności</label>
+                                <input type="date" class="form-control" id="paymentDate" th:field="*{paymentDate}"
+                                       min="2000-01-01" th:attr="max=${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"
+                                       th:classappend="${#fields.hasErrors('paymentDate') or #fields.hasErrors('paymentDateNotBeforeMinimum')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('paymentDate')}" th:errors="*{paymentDate}">Błąd daty</div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('paymentDateNotBeforeMinimum')}" th:errors="*{paymentDateNotBeforeMinimum}">Błąd daty</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label fw-bold">Opis</label>
+                            <textarea class="form-control" id="description" th:field="*{description}" rows="3"
+                                      th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"></textarea>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Błąd opisu</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a th:href="@{/payments}" class="btn btn-secondary">Anuluj</a>
+                            <button type="submit" class="btn btn-success px-4 fw-bold">
+                                <i class="bi bi-save me-1"></i> Zapisz płatność
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
