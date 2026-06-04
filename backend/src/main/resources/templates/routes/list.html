@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Zarządzanie Trasami</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row mb-3 align-items-center">
+        <div class="col">
+            <h2>Katalog Tras</h2>
+        </div>
+        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+            <a th:href="@{/routes/create}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Zdefiniuj nową trasę</a>
+        </div>
+    </div>
+
+    <!-- Alerty -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i>
+        <span th:text="${successMessage}">Sukces</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Nazwa Trasy</th>
+                            <th scope="col">Z -> Do</th>
+                            <th scope="col">Dystans (km)</th>
+                            <th scope="col">Poziom Trudności</th>
+                            <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="route : ${routes}">
+                            <td class="fw-bold" th:text="${route.name}">Szlak Północny</td>
+                            <td>
+                                <span class="badge bg-secondary" th:text="${route.startPoint}">A</span>
+                                <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                <span class="badge bg-secondary" th:text="${route.endPoint}">B</span>
+                            </td>
+                            <td th:text="${route.distanceKm != null ? route.distanceKm + ' km' : 'Nieznany'}">120.5 km</td>
+                            <td>
+                                <span class="badge" th:classappend="${route.difficultyLevel.riskLevel > 3 ? 'bg-danger' : (route.difficultyLevel.riskLevel > 2 ? 'bg-warning text-dark' : 'bg-info text-dark')}"
+                                      th:text="${route.difficultyLevel.name + ' (Ryzyko: ' + route.difficultyLevel.riskLevel + ')'}">
+                                    Standardowa (Ryzyko: 2)
+                                </span>
+                            </td>
+                            <td class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+                                <a th:href="@{/routes/{id}/edit(id=${route.id})}" class="btn btn-sm btn-outline-primary" title="Edytuj">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(routes)}">
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-info-circle"></i> Brak zdefiniowanych tras. Skonfiguruj nową mapę drogową.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
