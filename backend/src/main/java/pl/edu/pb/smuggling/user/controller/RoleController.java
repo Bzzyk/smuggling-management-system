@@ -37,8 +37,24 @@ public class RoleController {
     }
 
     @PostMapping("/{id}/edit")
-    public String editRoleDescription(@PathVariable Integer id, @RequestParam String description, RedirectAttributes redirectAttributes) {
-        roleService.updateRoleDescription(id, description);
+    public String editRoleDescription(@PathVariable Integer id,
+                                      @RequestParam String description,
+                                      Model model,
+                                      RedirectAttributes redirectAttributes) {
+        Role role = roleService.getRoleById(id);
+        if (role == null) {
+            return "redirect:/roles";
+        }
+
+        String trimmedDescription = description != null ? description.trim() : "";
+        if (trimmedDescription.length() > 255) {
+            role.setDescription(description);
+            model.addAttribute("role", role);
+            model.addAttribute("descriptionError", "Opis roli może mieć maksymalnie 255 znaków.");
+            return "roles/form";
+        }
+
+        roleService.updateRoleDescription(id, trimmedDescription);
         redirectAttributes.addFlashAttribute("success", "Zaktualizowano opis roli.");
         return "redirect:/roles";
     }

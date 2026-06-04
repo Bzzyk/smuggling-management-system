@@ -13,6 +13,8 @@
                     <a th:href="@{/roles}" class="btn btn-sm btn-light"><i class="bi bi-arrow-left"></i> Powrót</a>
                 </div>
                 <div class="card-body">
+                    <div th:if="${descriptionError}" class="alert alert-danger" role="alert" th:text="${descriptionError}"></div>
+
                     <div class="mb-3">
                         <strong>Rola:</strong> 
                         <span class="badge bg-info text-dark ms-2" th:text="${role.name}">ADMIN</span>
@@ -21,8 +23,10 @@
                     <form th:action="@{/roles/{id}/edit(id=${role.id})}" method="post">
                         <div class="mb-3">
                             <label for="description" class="form-label fw-bold">Opis roli:</label>
-                            <textarea class="form-control" id="description" name="description" rows="3" 
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      th:classappend="${descriptionError} ? 'is-invalid' : ''"
                                       th:text="${role.description}" placeholder="Podaj opis roli..." maxlength="255"></textarea>
+                            <div th:if="${descriptionError}" class="invalid-feedback" th:text="${descriptionError}"></div>
                         </div>
                         
                         <div class="d-grid mt-4">
