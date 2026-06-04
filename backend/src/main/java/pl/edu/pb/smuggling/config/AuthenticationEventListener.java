@@ -57,9 +57,13 @@ public class AuthenticationEventListener {
 
     private String getClientIp(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
-            return request.getRemoteAddr();
+        if (xfHeader != null && !xfHeader.isEmpty()) {
+            return xfHeader.split(",")[0].trim();
         }
-        return xfHeader.split(",")[0];
+        String xrHeader = request.getHeader("X-Real-IP");
+        if (xrHeader != null && !xrHeader.isEmpty()) {
+            return xrHeader.trim();
+        }
+        return request.getRemoteAddr();
     }
 }
