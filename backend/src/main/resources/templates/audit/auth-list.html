@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Logi Logowań</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row mb-3 align-items-center">
+        <div class="col">
+            <h2>Logi Logowań do Systemu</h2>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col" style="width: 15%">Data i Czas</th>
+                            <th scope="col" style="width: 15%">Użytkownik</th>
+                            <th scope="col" style="width: 10%">Status</th>
+                            <th scope="col" style="width: 20%">Adres IP</th>
+                            <th scope="col" style="width: 40%">Przeglądarka / Urządzenie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${authLogs}">
+                            <td th:text="${#temporals.format(log.attemptedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-06-03 12:00:00</td>
+                            <td>
+                                <span class="fw-bold" th:text="${log.username}">admin</span>
+                                <span class="badge bg-secondary ms-1" th:if="${log.user != null}" th:text="'ID: ' + ${log.user.id}"></span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success" th:if="${log.status == 'SUCCESS'}">SUKCES</span>
+                                <span class="badge bg-danger" th:if="${log.status == 'FAILURE'}">BŁĄD</span>
+                                <span class="badge bg-info text-dark" th:if="${log.status == 'LOGOUT'}">WYLOGOWANIE</span>
+                            </td>
+                            <td style="font-family: monospace;">
+                                <i class="bi bi-globe me-1 text-muted"></i><span th:text="${log.ipAddress}">127.0.0.1</span>
+                            </td>
+                            <td style="font-size: 0.85rem;" class="text-muted" th:text="${log.userAgent}">
+                                Mozilla/5.0...
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(authLogs)}">
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-info-circle"></i> Brak zdarzeń logowania.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Paginacja -->
+    <nav th:if="${totalPages > 1}" aria-label="Nawigacja paginacji" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/auth-logs(page=${currentPage - 1})}" tabindex="-1">Poprzednia</a>
+            </li>
+            
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link" th:href="@{/auth-logs(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/auth-logs(page=${currentPage + 1})}">Następna</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>

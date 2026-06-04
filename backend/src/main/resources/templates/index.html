@@ -1,17 +1,48 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragments/layout}">
 <head>
-    <meta charset="UTF-8">
-    <title>Smuggling Management System</title>
+    <title>Dashboard - SMS</title>
 </head>
 <body>
-<h1>Smuggling Management System</h1>
-
-<p>Aplikacja backendowa działa poprawnie.</p>
-
-<ul>
-    <li><a href="/db-test">Test połączenia z bazą danych</a></li>
-</ul>
-
+<div layout:fragment="content" class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Witaj w Systemie Zarządzania Przemytem</h1>
+            
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card bg-primary text-white h-100 shadow">
+                        <div class="card-body">
+                            <h5 class="card-title">Zlecenia</h5>
+                            <p class="card-text">Przejdź do zarządzania zleceniami.</p>
+                            <a href="/orders" class="btn btn-light btn-sm">Przejdź</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card bg-success text-white h-100 shadow">
+                        <div class="card-body">
+                            <h5 class="card-title">Transporty</h5>
+                            <p class="card-text">Podgląd aktualnych transportów i tras.</p>
+                            <a href="/transports" class="btn btn-light btn-sm">Przejdź</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card bg-warning text-dark h-100 shadow">
+                        <div class="card-body">
+                            <h5 class="card-title">Magazyny i Ładunki</h5>
+                            <p class="card-text">Sprawdź stany magazynowe.</p>
+                            <a href="/cargos" class="btn btn-dark btn-sm">Przejdź</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Szczegóły Transportu</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row mb-3">
+        <div class="col d-flex align-items-center">
+            <a th:href="@{/transports}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i> Powrót</a>
+            <h2 class="mb-0">Panel Operacyjny Transportu</h2>
+        </div>
+        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+            <a th:href="@{/transports/{id}/edit(id=${transport.id})}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edytuj parametry</a>
+        </div>
+    </div>
+
+    <!-- Alerty -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i>
+        <span th:text="${successMessage}">Sukces</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        <span th:text="${errorMessage}">Błąd</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row g-4">
+        <!-- Karta z informacjami -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-square me-2"></i> Dane Logistyczne</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <th class="w-25 text-muted">Status:</th>
+                                <td>
+                                    <span class="badge fs-6" th:classappend="${transport.status.name == 'DOSTARCZONY' ? 'bg-success' : (transport.status.name == 'ZAPLANOWANY' ? 'bg-info text-dark' : (transport.status.name == 'W_DRODZE' ? 'bg-primary' : 'bg-danger'))}"
+                                          th:text="${transport.status.name}">STATUS</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Zlecenie:</th>
+                                <td><strong th:text="${transport.order.title}">Nazwa</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Termin:</th>
+                                <td>
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    <span th:text="${transport.transportDate}">Data</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Trasa:</th>
+                                <td>
+                                    <span th:if="${transport.route != null}" th:text="${transport.route.name}">Szlak</span>
+                                    <span th:if="${transport.route == null}" class="fst-italic text-muted">Brak narzuconej trasy</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-geo-alt-fill text-danger"></i> <span th:text="${transport.startLocation}">A</span>
+                                        <i class="bi bi-arrow-right mx-1"></i>
+                                        <i class="bi bi-geo-alt-fill text-success"></i> <span th:text="${transport.destination}">B</span>
+                                    </small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Pojazd:</th>
+                                <td>
+                                    <span th:if="${transport.vehicle != null}">
+                                        <i class="bi bi-truck me-1"></i>
+                                        <span th:text="${transport.vehicle.brand + ' ' + transport.vehicle.model}">Wóz</span>
+                                        <span class="badge bg-secondary ms-1" th:text="${transport.vehicle.registrationNumber}">REJ</span>
+                                    </span>
+                                    <span th:if="${transport.vehicle == null}" class="fst-italic text-muted">Oczekuje na przypisanie maszyny</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Notatki:</th>
+                                <td><em th:text="${transport.description ?: 'Brak'}">Brak</em></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ekipa Transportowa -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100 border-primary border-top border-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-primary"><i class="bi bi-people-fill me-2"></i> Ekipa Biorąca Udział</h5>
+                    <span class="badge bg-primary rounded-pill" th:text="${assignments.size()}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li th:each="assignment : ${assignments}" class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold">
+                                    <i class="bi bi-person-badge text-muted me-1"></i>
+                                    <span th:text="${assignment.smuggler.user.firstName + ' ' + assignment.smuggler.user.lastName}">Jan Kowalski</span>
+                                </h6>
+                                <small class="text-muted d-block" th:if="${assignment.note != null and !assignment.note.isEmpty()}">
+                                    <i class="bi bi-chat-left-text me-1"></i> <span th:text="${assignment.note}">Rola/Notatka</span>
+                                </small>
+                            </div>
+                            <div sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+                                <form th:action="@{/transports/{id}/unassign/{aid}(id=${transport.id}, aid=${assignment.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Usuń z ekipy" onclick="return confirm('Na pewno wyrzucić tego członka ekipy z transportu?');">
+                                        <i class="bi bi-person-x"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                        <li th:if="${#lists.isEmpty(assignments)}" class="list-group-item text-center py-4 text-muted">
+                            <i class="bi bi-exclamation-circle d-block mb-2 fs-3 text-warning"></i>
+                            Transport nie posiada jeszcze ekipy przydzielonej do zadania!
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Formularz dodawania -->
+                <div class="card-footer bg-light p-3" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+                    <form th:action="@{/transports/{id}/assign(id=${transport.id})}" method="post">
+                        <div class="row g-2">
+                            <div class="col-sm-5">
+                                <select name="smugglerId" class="form-select form-select-sm" required>
+                                    <option value="" disabled selected>Wybierz profil...</option>
+                                    <option th:each="profile : ${allSmugglers}" th:value="${profile.userId}" 
+                                            th:text="${profile.user.firstName + ' ' + profile.user.lastName + ' (' + profile.experienceLevel + ')'}"></option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" name="note" class="form-control form-control-sm" placeholder="Rola / Zbrojenie">
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="submit" class="btn btn-sm btn-primary w-100">Dodaj</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

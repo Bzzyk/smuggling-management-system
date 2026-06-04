@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Szczegóły Zlecenia</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row mb-3">
+        <div class="col d-flex align-items-center">
+            <a th:href="@{/orders}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i> Powrót do Listy</a>
+            <h2 class="mb-0">Szczegóły Zlecenia</h2>
+        </div>
+        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+            <a th:href="@{/orders/{id}/edit(id=${order.id})}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edytuj parametry zlecenia</a>
+        </div>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i>
+        <span th:text="${successMessage}">Sukces</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Karta zlecenia -->
+    <div class="card shadow-sm mb-4 border-start border-5 border-info">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3 class="card-title fw-bold" th:text="${order.title}">Tytuł zlecenia</h3>
+                    <p class="text-muted" th:text="${order.description ?: 'Brak opisu zlecenia.'}"></p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge fs-5 mb-2" th:classappend="${order.status.name == 'ZREALIZOWANE' ? 'bg-success' : (order.status.name == 'PLANOWANE' ? 'bg-info text-dark' : (order.status.name == 'W_TRAKCIE' ? 'bg-primary' : 'bg-danger'))}" th:text="${order.status.name}">STATUS</span>
+                    <br>
+                    <span th:if="${order.estimatedProfit != null and order.estimatedProfit > 0}" class="text-success fw-bold fs-5">
+                        Zysk: $<span th:text="${order.estimatedProfit}">0.00</span>
+                    </span>
+                </div>
+            </div>
+            <hr>
+            <div class="row text-muted">
+                <div class="col-sm-4">
+                    <i class="bi bi-calendar-event me-1"></i> Planowana data: 
+                    <strong th:text="${order.plannedDate != null ? order.plannedDate : 'Nieokreślona'}">Data</strong>
+                </div>
+                <div class="col-sm-4">
+                    <i class="bi bi-person-badge me-1"></i> Utworzone przez: 
+                    <strong th:text="${order.createdBy.firstName + ' ' + order.createdBy.lastName}">Ktoś</strong>
+                </div>
+                <div class="col-sm-4">
+                    <i class="bi bi-person-check-fill me-1"></i> Odpowiedzialny: 
+                    <strong th:text="${order.responsibleUser != null ? order.responsibleUser.firstName + ' ' + order.responsibleUser.lastName : 'Brak przypisania'}">Ktoś</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista powiązanych transportów -->
+    <div class="card shadow-sm border-0 border-top border-4 border-success">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0 text-success"><i class="bi bi-truck me-2"></i> Transporty przypisane do zlecenia</h5>
+            <div sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+                <a th:href="@{/transports/create(orderId=${order.id})}" class="btn btn-sm btn-success fw-bold">
+                    <i class="bi bi-plus-circle me-1"></i> Dodaj Etap Transportu
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Trasa</th>
+                            <th>Pojazd</th>
+                            <th>Status</th>
+                            <th class="text-end">Panel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="transport : ${transports}">
+                            <td th:text="${transport.transportDate}">Data</td>
+                            <td>
+                                <span th:if="${transport.route != null}" th:text="${transport.route.startPoint + ' -> ' + transport.route.endPoint}">A->B</span>
+                                <span th:if="${transport.route == null}" th:text="${transport.startLocation + ' -> ' + transport.destination}">A->B</span>
+                            </td>
+                            <td>
+                                <span th:if="${transport.vehicle != null}" th:text="${transport.vehicle.brand + ' ' + transport.vehicle.registrationNumber}">Wóz</span>
+                                <span th:if="${transport.vehicle == null}" class="text-muted fst-italic">Brak</span>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${transport.status.name == 'DOSTARCZONY' ? 'bg-success' : (transport.status.name == 'ZAPLANOWANY' ? 'bg-info text-dark' : (transport.status.name == 'W_DRODZE' ? 'bg-primary' : 'bg-danger'))}"
+                                      th:text="${transport.status.name}">STATUS</span>
+                            </td>
+                            <td class="text-end">
+                                <a th:href="@{/transports/{id}(id=${transport.id})}" class="btn btn-sm btn-outline-info">Panel Operacyjny</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(transports)}">
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-cone-striped fs-3 d-block mb-2 text-warning"></i>
+                                Brak zaplanowanych transportów dla tego zlecenia. Kliknij w górny róg, aby dodać pierwszy etap.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

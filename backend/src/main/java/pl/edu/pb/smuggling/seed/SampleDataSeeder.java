@@ -43,7 +43,7 @@ public class SampleDataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(SampleDataSeeder.class);
 
-    private final Faker faker = new Faker(new Locale("pl"));
+    private final Faker faker = new Faker(Locale.of("pl"));
     private final Random random = new Random(30);
 
     private final UserRepository userRepository;
@@ -198,7 +198,7 @@ public class SampleDataSeeder implements CommandLineRunner {
             vehicle.setRegistrationNumber(seed.registrationNumber());
             vehicle.setBrand(seed.brand());
             vehicle.setModel(seed.model());
-            vehicle.setVehicleType(seed.vehicleType());
+            vehicle.setVehicleType(pl.edu.pb.smuggling.transport.model.VehicleType.valueOf(seed.vehicleType()));
             vehicle.setLoadCapacity(seed.loadCapacity());
             vehicle.setAvailable(true);
 

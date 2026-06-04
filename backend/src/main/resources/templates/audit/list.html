@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Logi Systemowe</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row mb-3 align-items-center">
+        <div class="col">
+            <h2>Logi Audytowe</h2>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col" style="width: 15%">Data i Czas</th>
+                            <th scope="col" style="width: 15%">Użytkownik (Admin)</th>
+                            <th scope="col" style="width: 15%">Akcja</th>
+                            <th scope="col" style="width: 10%">ID Rekordu</th>
+                            <th scope="col" style="width: 20%">Poprzednia wartość</th>
+                            <th scope="col" style="width: 25%">Nowa wartość</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${auditLogs}">
+                            <td th:text="${#temporals.format(log.changedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-06-03 12:00:00</td>
+                            <td>
+                                <span class="badge bg-secondary" th:text="${log.changedBy != null ? log.changedBy.username : 'SYSTEM'}">admin</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark" th:text="${log.action}">UPDATE</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border" th:text="${log.recordId}">1</span>
+                            </td>
+                            <td style="font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-all;" th:text="${log.oldValue}">
+                                stary
+                            </td>
+                            <td style="font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-all;" th:text="${log.newValue}">
+                                nowy
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(auditLogs)}">
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-info-circle"></i> Brak zapisanych logów w systemie.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Paginacja -->
+    <nav th:if="${totalPages > 1}" aria-label="Nawigacja paginacji" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/audit-logs(page=${currentPage - 1})}" tabindex="-1">Poprzednia</a>
+            </li>
+            
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link" th:href="@{/audit-logs(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/audit-logs(page=${currentPage + 1})}">Następna</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>

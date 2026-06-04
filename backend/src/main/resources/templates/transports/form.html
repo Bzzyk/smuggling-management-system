@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="${transportForm.id == null ? 'Planowanie Transportu' : 'Edycja Transportu'}">Transport</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-boxes me-2"></i>
+                        <span th:text="${transportForm.id == null ? 'Konfiguracja nowego transportu' : 'Edycja parametrów transportu'}">Dodaj transport</span>
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div th:if="${#fields.hasErrors('transportForm.*')}" class="alert alert-danger">
+                        Upewnij się, że poprawnie wypełniłeś wszystkie wymagane pola.
+                    </div>
+
+                    <form th:action="${transportForm.id == null ? '/transports/create' : '/transports/' + transportForm.id + '/edit'}"
+                          th:object="${transportForm}" method="post">
+                        
+                        <input type="hidden" th:field="*{id}" />
+
+                        <!-- Sekcja 1: Podstawy operacji -->
+                        <h5 class="border-bottom pb-2 mb-3">1. Zlecenie i Status</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label for="orderId" class="form-label fw-bold">Zlecenie przemytu</label>
+                                <select class="form-select" id="orderId" th:field="*{orderId}" th:disabled="${transportForm.orderId != null}"
+                                        th:classappend="${#fields.hasErrors('orderId')} ? 'is-invalid' : ''" required>
+                                    <option value="" disabled selected>Wybierz zlecenie do realizacji...</option>
+                                    <option th:each="order : ${orders}" th:value="${order.id}" th:text="${order.title}"></option>
+                                </select>
+                                <input type="hidden" th:if="${transportForm.orderId != null}" th:field="*{orderId}" />
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('orderId')}" th:errors="*{orderId}">Błąd zlecenia</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="statusId" class="form-label fw-bold">Aktualny Status</label>
+                                <select class="form-select" id="statusId" th:field="*{statusId}"
+                                        th:classappend="${#fields.hasErrors('statusId')} ? 'is-invalid' : ''" required>
+                                    <option value="" disabled selected>Wybierz status...</option>
+                                    <option th:each="status : ${statuses}" th:value="${status.id}" th:text="${status.name}"></option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('statusId')}" th:errors="*{statusId}">Błąd statusu</div>
+                            </div>
+                        </div>
+
+                        <!-- Sekcja 2: Zasoby i Logistyka -->
+                        <h5 class="border-bottom pb-2 mb-3">2. Logistyka (Flota i Trasa)</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="vehicleId" class="form-label fw-bold">Pojazd (Opcjonalnie)</label>
+                                <select class="form-select" id="vehicleId" th:field="*{vehicleId}">
+                                    <option value="" selected>--- Brak przypisanego pojazdu ---</option>
+                                    <option th:each="vehicle : ${vehicles}" th:value="${vehicle.id}" 
+                                            th:text="${vehicle.brand + ' ' + vehicle.model + ' (' + vehicle.registrationNumber + ')'}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="routeId" class="form-label fw-bold">Zdefiniowana Trasa (Opcjonalnie)</label>
+                                <select class="form-select" id="routeId" th:field="*{routeId}">
+                                    <option value="" selected>--- Wybierz z katalogu tras ---</option>
+                                    <option th:each="route : ${routes}" th:value="${route.id}" 
+                                            th:text="${route.name + ' (' + route.startPoint + ' -> ' + route.endPoint + ')'}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="startLocation" class="form-label fw-bold">Punkt nadania ładunku</label>
+                                <input type="text" class="form-control" id="startLocation" th:field="*{startLocation}"
+                                       th:classappend="${#fields.hasErrors('startLocation')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('startLocation')}" th:errors="*{startLocation}">Błąd</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="destination" class="form-label fw-bold">Cel przemytu (Punkt odbioru)</label>
+                                <input type="text" class="form-control" id="destination" th:field="*{destination}"
+                                       th:classappend="${#fields.hasErrors('destination')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('destination')}" th:errors="*{destination}">Błąd</div>
+                            </div>
+                        </div>
+
+                        <!-- Sekcja 3: Czas i Szczegóły -->
+                        <h5 class="border-bottom pb-2 mb-3">3. Czas i Instrukcje</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="transportDate" class="form-label fw-bold">Data rozpoczęcia transportu</label>
+                                <input type="date" class="form-control" id="transportDate" th:field="*{transportDate}"
+                                       th:classappend="${#fields.hasErrors('transportDate')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('transportDate')}" th:errors="*{transportDate}">Błąd daty</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plannedArrivalDate" class="form-label fw-bold">Planowana data przyjazdu</label>
+                                <input type="date" class="form-control" id="plannedArrivalDate" th:field="*{plannedArrivalDate}"
+                                       th:classappend="${#fields.hasErrors('plannedArrivalDate')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('plannedArrivalDate')}" th:errors="*{plannedArrivalDate}">Błąd daty</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label fw-bold">Notatki operacyjne (opcjonalnie)</label>
+                            <textarea class="form-control" id="description" th:field="*{description}" rows="3"
+                                      placeholder="Zalecenia dotyczące załadunku, punkty kontaktowe..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a th:href="@{/transports}" class="btn btn-secondary">Anuluj</a>
+                            <button type="submit" class="btn btn-success px-4 fw-bold">
+                                <i class="bi bi-shield-check me-1"></i> Zapisz Transport
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-package pl.edu.pb.smuggling.order.model;
+package pl.edu.pb.smuggling.common.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
