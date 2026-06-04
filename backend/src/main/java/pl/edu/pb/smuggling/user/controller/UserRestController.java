@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class UserRestController {
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
         List<UserDto> users = userService.getAllUsers().stream()
@@ -36,6 +37,7 @@ public class UserRestController {
         return ResponseEntity.ok(users);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Integer id) {
         User user = userService.getUserById(id);
