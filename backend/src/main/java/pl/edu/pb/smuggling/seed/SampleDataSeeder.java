@@ -198,7 +198,7 @@ public class SampleDataSeeder implements CommandLineRunner {
             vehicle.setRegistrationNumber(seed.registrationNumber());
             vehicle.setBrand(seed.brand());
             vehicle.setModel(seed.model());
-            vehicle.setVehicleType(seed.vehicleType());
+            vehicle.setVehicleType(pl.edu.pb.smuggling.transport.model.VehicleType.valueOf(seed.vehicleType()));
             vehicle.setLoadCapacity(seed.loadCapacity());
             vehicle.setAvailable(true);
 

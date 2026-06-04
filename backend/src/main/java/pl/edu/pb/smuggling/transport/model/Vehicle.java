@@ -2,6 +2,8 @@ package pl.edu.pb.smuggling.transport.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,12 +30,13 @@ public class Vehicle {
     @Column(nullable = false, length = 50)
     private String model;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "vehicle_type", nullable = false, length = 30)
-    private String vehicleType;
+    private VehicleType vehicleType;
 
     @Column(name = "load_capacity", nullable = false)
-    private int loadCapacity;
+    private Integer loadCapacity;
 
     @Column(nullable = false)
-    private boolean available = true;
+    private Boolean available = true;
 }
