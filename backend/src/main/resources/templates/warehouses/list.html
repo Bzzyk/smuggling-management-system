@@ -37,17 +37,30 @@
                         <th>Nazwa</th>
                         <th>Lokalizacja</th>
                         <th>Pojemność</th>
+                        <th>Zajęte</th>
+                        <th>Wolne</th>
+                        <th>Wypełnienie</th>
                         <th>Status</th>
                         <th class="text-end">Akcje</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="warehouse : ${warehouses}">
+                    <tr th:each="warehouseView : ${warehouseViews}" th:with="warehouse=${warehouseView.warehouse()}">
                         <td>
                             <strong th:text="${warehouse.name}">Magazyn</strong>
                         </td>
                         <td th:text="${warehouse.location}">Lokalizacja</td>
                         <td th:text="${warehouse.maxCapacity}">0</td>
+                        <td th:text="${warehouseView.usedCapacity()}">0</td>
+                        <td>
+                            <span th:classappend="${warehouseView.freeCapacity() < 0 ? 'text-danger fw-bold' : ''}"
+                                  th:text="${warehouseView.freeCapacity()}">0</span>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${warehouseView.usagePercentage() > 100 ? 'bg-danger' : (warehouseView.usagePercentage() >= 80 ? 'bg-warning text-dark' : 'bg-success')}"
+                                  th:text="${warehouseView.usagePercentage() + '%'}">0%</span>
+                        </td>
                         <td>
                             <span th:if="${warehouse.active}" class="badge bg-success">Aktywny</span>
                             <span th:unless="${warehouse.active}" class="badge bg-danger">Nieaktywny</span>
@@ -71,8 +84,8 @@
                             </form>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(warehouses)}">
-                        <td colspan="5" class="text-center text-muted py-4">
+                    <tr th:if="${#lists.isEmpty(warehouseViews)}">
+                        <td colspan="8" class="text-center text-muted py-4">
                             <i class="bi bi-info-circle"></i> Brak magazynów w systemie.
                         </td>
                     </tr>
