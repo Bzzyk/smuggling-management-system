@@ -2,6 +2,7 @@ package pl.edu.pb.smuggling.transport.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.edu.pb.smuggling.common.service.AuditLogService;
@@ -14,6 +15,8 @@ import pl.edu.pb.smuggling.transport.model.TransportStatus;
 import pl.edu.pb.smuggling.transport.repository.RouteRepository;
 import pl.edu.pb.smuggling.transport.repository.TransportRepository;
 import pl.edu.pb.smuggling.transport.repository.TransportStatusRepository;
+import pl.edu.pb.smuggling.user.model.User;
+import pl.edu.pb.smuggling.user.repository.UserRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,16 +28,34 @@ public class TransportService {
 
     private static final String STATUS_PLANNED = "ZAPLANOWANY";
     private static final String STATUS_ON_ROAD = "W_DRODZE";
+    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_BOSS = "BOSS";
+    private static final String ROLE_SMUGGLER = "SMUGGLER";
 
     private final TransportRepository transportRepository;
     private final SmugglingOrderRepository smugglingOrderRepository;
     private final RouteRepository routeRepository;
     private final TransportStatusRepository transportStatusRepository;
+    private final UserRepository userRepository;
     private final JdbcTemplate jdbcTemplate;
     private final AuditLogService auditLogService;
 
     public List<Transport> getAllTransports() {
         return transportRepository.findAll();
+    }
+
+    public List<Transport> getVisibleTransports(String username) {
+        User user = getUserByUsername(username);
+        if (hasRole(user, ROLE_ADMIN)) {
+            return transportRepository.findAll();
+        }
+        if (hasRole(user, ROLE_BOSS)) {
+            return transportRepository.findVisibleForBoss(user.getId());
+        }
+        if (hasRole(user, ROLE_SMUGGLER)) {
+            return transportRepository.findVisibleForSmuggler(user.getId());
+        }
+        return List.of();
     }
 
     public SmugglingOrder getOrderById(Integer id) {
@@ -49,6 +70,28 @@ public class TransportService {
     public Transport getTransportById(Integer id) {
         return transportRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono transportu o ID: " + id));
+    }
+
+    public Transport getVisibleTransportById(Integer id, String username) {
+        User user = getUserByUsername(username);
+        Transport transport = getTransportById(id);
+        if (!canViewTransport(user, transport)) {
+            throw new AccessDeniedException("Brak dostepu do tego transportu.");
+        }
+        return transport;
+    }
+
+    public Transport getManageableTransportById(Integer id, String username) {
+        User user = getUserByUsername(username);
+        Transport transport = getTransportById(id);
+        if (!canManageTransport(user, transport)) {
+            throw new AccessDeniedException("Brak uprawnien do zarzadzania tym transportem.");
+        }
+        return transport;
+    }
+
+    public void assertCanManageTransport(Integer id, String username) {
+        getManageableTransportById(id, username);
     }
 
     @Transactional
@@ -84,13 +127,18 @@ public class TransportService {
 
     @Transactional
     public void startTransport(Integer transportId) {
+        changeTransportStatus(transportId, STATUS_ON_ROAD);
+    }
+
+    @Transactional
+    public void changeTransportStatus(Integer transportId, String statusName) {
         Transport transport = getTransportById(transportId);
         Map<String, Object> oldState = transportToMap(transport);
 
-        jdbcTemplate.update("CALL change_transport_status(?, ?)", transportId, STATUS_ON_ROAD);
+        jdbcTemplate.update("CALL change_transport_status(?, ?)", transportId, statusName);
 
         Map<String, Object> newState = new HashMap<>();
-        newState.put("status", STATUS_ON_ROAD);
+        newState.put("status", statusName);
         auditLogService.logAction("transports", transportId, "CHANGE_STATUS", oldState, newState);
     }
 
@@ -127,5 +175,44 @@ public class TransportService {
         map.put("plannedArrivalDate", transport.getPlannedArrivalDate());
         map.put("description", transport.getDescription());
         return map;
+    }
+
+    private User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono uzytkownika: " + username));
+    }
+
+    private boolean canViewTransport(User user, Transport transport) {
+        if (hasRole(user, ROLE_ADMIN)) {
+            return true;
+        }
+        if (hasRole(user, ROLE_BOSS)) {
+            return isBossTransport(user, transport);
+        }
+        if (hasRole(user, ROLE_SMUGGLER)) {
+            return transportRepository.findVisibleForSmuggler(user.getId()).stream()
+                    .anyMatch(visibleTransport -> visibleTransport.getId().equals(transport.getId()));
+        }
+        return false;
+    }
+
+    private boolean canManageTransport(User user, Transport transport) {
+        if (hasRole(user, ROLE_ADMIN)) {
+            return true;
+        }
+        return hasRole(user, ROLE_BOSS) && isBossTransport(user, transport);
+    }
+
+    private boolean isBossTransport(User user, Transport transport) {
+        return transport.getOrder() != null
+                && ((transport.getOrder().getCreatedBy() != null
+                && user.getId().equals(transport.getOrder().getCreatedBy().getId()))
+                || (transport.getOrder().getResponsibleUser() != null
+                && user.getId().equals(transport.getOrder().getResponsibleUser().getId())));
+    }
+
+    private boolean hasRole(User user, String roleName) {
+        return user.getRoles().stream()
+                .anyMatch(role -> roleName.equals(role.getName()));
     }
 }

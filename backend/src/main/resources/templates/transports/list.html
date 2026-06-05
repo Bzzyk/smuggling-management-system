@@ -1,84 +1,92 @@
 <!DOCTYPE html>
 <html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Zarządzanie Transportami</title>
+    <title>Zarzadzanie transportami</title>
 </head>
 <body>
 <div layout:fragment="content" class="container mt-4">
     <div class="row mb-3 align-items-center">
         <div class="col">
-            <h2>Przerzuty i Transporty</h2>
-            <p class="text-muted small mb-0">Aby zaplanować nowy transport, przejdź do <a th:href="@{/orders}">Zleceń Operacyjnych</a> i skonfiguruj etap dla konkretnego zlecenia.</p>
+            <h2>Przerzuty i transporty</h2>
+            <p class="text-muted small mb-0">
+                Aby zaplanowac nowy transport, przejdz do <a th:href="@{/orders}">zlecen operacyjnych</a>
+                i skonfiguruj etap dla konkretnego zlecenia.
+            </p>
         </div>
     </div>
 
-    <!-- Alerty -->
     <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle me-1"></i>
         <span th:text="${successMessage}">Sukces</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-
-
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
-                        <tr>
-                            <th scope="col">Data</th>
-                            <th scope="col">Zlecenie</th>
-                            <th scope="col">Pojazd</th>
-                            <th scope="col">Trasa</th>
-                            <th scope="col">Status</th>
-                            <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>
-                        </tr>
+                    <tr>
+                        <th scope="col">Data</th>
+                        <th scope="col">Zlecenie</th>
+                        <th scope="col">Pojazd</th>
+                        <th scope="col">Trasa</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Akcje</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="transport : ${transports}">
-                            <td>
-                                <i class="bi bi-calendar3 text-muted me-1"></i>
-                                <span th:text="${transport.transportDate}">2026-10-10</span>
-                            </td>
-                            <td>
-                                <strong th:text="${transport.order.title}">Nazwa Zlecenia</strong>
-                            </td>
-                            <td>
-                                <span th:if="${transport.vehicle != null}">
-                                    <i class="bi bi-truck me-1"></i>
-                                    <span th:text="${transport.vehicle.brand + ' ' + transport.vehicle.model}">Ford Transit</span>
-                                    <small class="text-muted" th:text="'(' + ${transport.vehicle.registrationNumber} + ')'"></small>
-                                </span>
-                                <span th:if="${transport.vehicle == null}" class="text-muted fst-italic">Brak pojazdu</span>
-                            </td>
-                            <td>
-                                <span th:if="${transport.route != null}">
-                                    <span th:text="${transport.route.startPoint}">A</span> <i class="bi bi-arrow-right mx-1 text-muted"></i> <span th:text="${transport.route.endPoint}">B</span>
-                                </span>
-                                <span th:if="${transport.route == null}">
-                                    <span th:text="${transport.startLocation}">A</span> <i class="bi bi-arrow-right mx-1 text-muted"></i> <span th:text="${transport.destination}">B</span>
-                                    <small class="text-muted d-block">(Trasa niezdefiniowana)</small>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge" th:classappend="${transport.status.name == 'DOSTARCZONY' ? 'bg-success' : (transport.status.name == 'ZAPLANOWANY' ? 'bg-info text-dark' : (transport.status.name == 'W_DRODZE' ? 'bg-primary' : 'bg-danger'))}"
-                                      th:text="${transport.status.name}">ZAPLANOWANY</span>
-                            </td>
-                            <td class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-                                <a th:href="@{/transports/{id}(id=${transport.id})}" class="btn btn-sm btn-outline-info" title="Zarządzaj załogą i szczegółami">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a th:href="@{/transports/{id}/edit(id=${transport.id})}" class="btn btn-sm btn-outline-primary" title="Edytuj operację">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(transports)}">
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                <i class="bi bi-info-circle"></i> Brak zaplanowanych transportów. Skonfiguruj nowy przerzut.
-                            </td>
-                        </tr>
+                    <tr th:each="transport : ${transports}">
+                        <td>
+                            <i class="bi bi-calendar3 text-muted me-1"></i>
+                            <span th:text="${transport.transportDate}">2026-10-10</span>
+                        </td>
+                        <td>
+                            <strong th:text="${transport.order.title}">Nazwa zlecenia</strong>
+                        </td>
+                        <td>
+                            <span th:if="${transport.vehicle != null}">
+                                <i class="bi bi-truck me-1"></i>
+                                <span th:text="${transport.vehicle.brand + ' ' + transport.vehicle.model}">Ford Transit</span>
+                                <small class="text-muted" th:text="'(' + ${transport.vehicle.registrationNumber} + ')'"></small>
+                            </span>
+                            <span th:if="${transport.vehicle == null}" class="text-muted fst-italic">Brak pojazdu</span>
+                        </td>
+                        <td>
+                            <span th:if="${transport.route != null}">
+                                <span th:text="${transport.route.startPoint}">A</span>
+                                <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                <span th:text="${transport.route.endPoint}">B</span>
+                            </span>
+                            <span th:if="${transport.route == null}">
+                                <span th:text="${transport.startLocation}">A</span>
+                                <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                <span th:text="${transport.destination}">B</span>
+                                <small class="text-muted d-block">(Trasa niezdefiniowana)</small>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${transport.status.name == 'DOSTARCZONY' ? 'bg-success' : (transport.status.name == 'ZAPLANOWANY' ? 'bg-info text-dark' : (transport.status.name == 'W_DRODZE' ? 'bg-primary' : 'bg-danger'))}"
+                                  th:text="${transport.status.name}">ZAPLANOWANY</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/transports/{id}(id=${transport.id})}" class="btn btn-sm btn-outline-info" title="Podglad transportu">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')"
+                               th:href="@{/transports/{id}/edit(id=${transport.id})}"
+                               class="btn btn-sm btn-outline-primary"
+                               title="Edytuj transport">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(transports)}">
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle"></i> Brak transportow do wyswietlenia.
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>

@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -41,8 +43,8 @@ public class TransportController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")
     @GetMapping
-    public String listTransports(Model model) {
-        model.addAttribute("transports", transportService.getAllTransports());
+    public String listTransports(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        model.addAttribute("transports", transportService.getVisibleTransports(userDetails.getUsername()));
         return "transports/list";
     }
 
@@ -86,8 +88,10 @@ public class TransportController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS')")
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable Integer id, Model model) {
-        Transport transport = transportService.getTransportById(id);
+    public String showEditForm(@PathVariable Integer id,
+                               @AuthenticationPrincipal UserDetails userDetails,
+                               Model model) {
+        Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         TransportFormDto dto = new TransportFormDto();
         dto.setId(transport.getId());
         dto.setOrderId(transport.getOrder().getId());
@@ -109,12 +113,14 @@ public class TransportController {
                                   @Valid @ModelAttribute("transportForm") TransportFormDto form,
                                   BindingResult result,
                                   Model model,
+                                  @AuthenticationPrincipal UserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             populateFormDictionaries(form.getOrderId(), model);
             return "transports/form";
         }
         try {
+            transportService.assertCanManageTransport(id, userDetails.getUsername());
             transportService.updateTransport(id, form);
             redirectAttributes.addFlashAttribute("successMessage", "Zaktualizowano parametry planu transportu.");
             return "redirect:/transports/" + id;
@@ -127,8 +133,10 @@ public class TransportController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")
     @GetMapping("/{id}")
-    public String showDetails(@PathVariable Integer id, Model model) {
-        Transport transport = transportService.getTransportById(id);
+    public String showDetails(@PathVariable Integer id,
+                              @AuthenticationPrincipal UserDetails userDetails,
+                              Model model) {
+        Transport transport = transportService.getVisibleTransportById(id, userDetails.getUsername());
         model.addAttribute("transport", transport);
         model.addAttribute("assignments", transportAssignmentService.getAssignmentsForTransport(id));
         model.addAttribute("cargos", transportAssignmentService.getCargosForTransport(id));
@@ -143,8 +151,9 @@ public class TransportController {
     public String selectVehicle(@PathVariable Integer id,
                                 @RequestParam(required = false) String vehicleType,
                                 @RequestParam(defaultValue = "0") int page,
+                                @AuthenticationPrincipal UserDetails userDetails,
                                 Model model) {
-        Transport transport = transportService.getTransportById(id);
+        Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         Page<AvailableVehicleDto> vehiclePage = transportAvailabilityService.getAssignableVehicles(id, vehicleType, safePage(page), PICKER_PAGE_SIZE);
         model.addAttribute("transport", transport);
         model.addAttribute("vehiclePage", vehiclePage);
@@ -159,8 +168,10 @@ public class TransportController {
     @PostMapping("/{id}/vehicles/{vehicleId}/assign")
     public String assignVehicle(@PathVariable Integer id,
                                 @PathVariable Integer vehicleId,
+                                @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
         try {
+            transportService.assertCanManageTransport(id, userDetails.getUsername());
             transportAssignmentService.assignVehicle(id, vehicleId);
             redirectAttributes.addFlashAttribute("successMessage", "Pojazd zostal przypisany przez procedure bazodanowa.");
         } catch (org.springframework.dao.DataAccessException e) {
@@ -173,8 +184,9 @@ public class TransportController {
     @GetMapping("/{id}/cargos")
     public String selectCargo(@PathVariable Integer id,
                               @RequestParam(defaultValue = "0") int page,
+                              @AuthenticationPrincipal UserDetails userDetails,
                               Model model) {
-        Transport transport = transportService.getTransportById(id);
+        Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         Page<AvailableCargoDto> cargoPage = transportAvailabilityService.getAssignableCargos(id, safePage(page), PICKER_PAGE_SIZE);
         model.addAttribute("transport", transport);
         model.addAttribute("cargoPage", cargoPage);
@@ -186,8 +198,10 @@ public class TransportController {
     @PostMapping("/{id}/cargos/{cargoId}/assign")
     public String assignCargo(@PathVariable Integer id,
                               @PathVariable Integer cargoId,
+                              @AuthenticationPrincipal UserDetails userDetails,
                               RedirectAttributes redirectAttributes) {
         try {
+            transportService.assertCanManageTransport(id, userDetails.getUsername());
             transportAssignmentService.assignCargo(id, cargoId);
             redirectAttributes.addFlashAttribute("successMessage", "Ladunek zostal przypisany do transportu.");
         } catch (IllegalArgumentException e) {
@@ -202,8 +216,10 @@ public class TransportController {
     @PostMapping("/{id}/cargos/{cargoId}/unassign")
     public String unassignCargo(@PathVariable Integer id,
                                 @PathVariable Integer cargoId,
+                                @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
         try {
+            transportService.assertCanManageTransport(id, userDetails.getUsername());
             transportAssignmentService.unassignCargo(id, cargoId);
             redirectAttributes.addFlashAttribute("successMessage", "Ladunek zostal odpiety od transportu.");
         } catch (IllegalArgumentException e) {
@@ -218,8 +234,9 @@ public class TransportController {
                                  @RequestParam(required = false) String experienceLevel,
                                  @RequestParam(required = false) BigDecimal minSuccessRate,
                                  @RequestParam(defaultValue = "0") int page,
+                                 @AuthenticationPrincipal UserDetails userDetails,
                                  Model model) {
-        Transport transport = transportService.getTransportById(id);
+        Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         Page<AvailableSmugglerDto> smugglerPage = transportAvailabilityService.getAssignableSmugglers(
                 experienceLevel,
                 minSuccessRate,
@@ -240,8 +257,9 @@ public class TransportController {
     public String assignSmugglerFromPicker(@PathVariable Integer id,
                                            @PathVariable Integer smugglerId,
                                            @RequestParam(required = false) String note,
+                                           @AuthenticationPrincipal UserDetails userDetails,
                                            RedirectAttributes redirectAttributes) {
-        return assignSmuggler(id, smugglerId, note, redirectAttributes);
+        return assignSmuggler(id, smugglerId, note, userDetails, redirectAttributes);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS')")
@@ -249,8 +267,10 @@ public class TransportController {
     public String assignSmuggler(@PathVariable Integer id,
                                  @RequestParam Integer smugglerId,
                                  @RequestParam(required = false) String note,
+                                 @AuthenticationPrincipal UserDetails userDetails,
                                  RedirectAttributes redirectAttributes) {
         try {
+            transportService.assertCanManageTransport(id, userDetails.getUsername());
             transportAssignmentService.assignSmuggler(id, smugglerId, note);
             redirectAttributes.addFlashAttribute("successMessage", "Przemytnik zostal przypisany przez procedure bazodanowa.");
         } catch (IllegalArgumentException e) {
@@ -265,8 +285,10 @@ public class TransportController {
     @PostMapping("/{id}/unassign/{assignmentId}")
     public String unassignSmuggler(@PathVariable Integer id,
                                    @PathVariable Integer assignmentId,
+                                   @AuthenticationPrincipal UserDetails userDetails,
                                    RedirectAttributes redirectAttributes) {
         try {
+            transportService.assertCanManageTransport(id, userDetails.getUsername());
             transportAssignmentService.unassignSmuggler(assignmentId);
             redirectAttributes.addFlashAttribute("successMessage", "Usunieto przypisanie z transportu.");
         } catch (org.springframework.dao.DataAccessException e) {
@@ -277,12 +299,24 @@ public class TransportController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS')")
     @PostMapping("/{id}/start")
-    public String startTransport(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+    public String startTransport(@PathVariable Integer id,
+                                 @AuthenticationPrincipal UserDetails userDetails,
+                                 RedirectAttributes redirectAttributes) {
+        return changeTransportStatus(id, "W_DRODZE", userDetails, redirectAttributes);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'BOSS')")
+    @PostMapping("/{id}/status")
+    public String changeTransportStatus(@PathVariable Integer id,
+                                        @RequestParam String statusName,
+                                        @AuthenticationPrincipal UserDetails userDetails,
+                                        RedirectAttributes redirectAttributes) {
         try {
-            transportService.startTransport(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Transport rozpoczal trase. Status zmienila procedura bazodanowa.");
+            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.changeTransportStatus(id, statusName);
+            redirectAttributes.addFlashAttribute("successMessage", "Status transportu zmienila procedura bazodanowa.");
         } catch (org.springframework.dao.DataAccessException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", extractDbErrorMessage(e, "Nie mozna rozpoczac transportu."));
+            redirectAttributes.addFlashAttribute("errorMessage", extractDbErrorMessage(e, "Nie mozna zmienic statusu transportu."));
         }
         return "redirect:/transports/" + id;
     }

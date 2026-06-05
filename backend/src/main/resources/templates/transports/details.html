@@ -63,11 +63,43 @@
                     </dl>
                 </div>
                 <div class="card-footer bg-white" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-                    <form th:if="${transport.status.name == 'ZAPLANOWANY'}" th:action="@{/transports/{id}/start(id=${transport.id})}" method="post">
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-play-fill"></i> Rozpocznij transport
-                        </button>
-                    </form>
+                    <div th:if="${transport.status.name == 'ZAPLANOWANY'}" class="d-grid gap-2">
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="W_DRODZE">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-play-fill"></i> Rozpocznij transport
+                            </button>
+                        </form>
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="ANULOWANY">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-x-circle"></i> Anuluj transport
+                            </button>
+                        </form>
+                    </div>
+                    <div th:if="${transport.status.name == 'W_DRODZE'}" class="d-grid gap-2">
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="DOSTARCZONY">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle"></i> Oznacz jako dostarczony
+                            </button>
+                        </form>
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="NIEUDANY">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="bi bi-exclamation-triangle"></i> Oznacz jako nieudany
+                            </button>
+                        </form>
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="ANULOWANY">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-x-circle"></i> Anuluj transport
+                            </button>
+                        </form>
+                    </div>
+                    <div th:if="${transport.status.name != 'ZAPLANOWANY' && transport.status.name != 'W_DRODZE'}" class="text-muted small">
+                        Transport jest zakonczony i nie mozna juz zmienic jego statusu.
+                    </div>
                 </div>
             </div>
         </div>
