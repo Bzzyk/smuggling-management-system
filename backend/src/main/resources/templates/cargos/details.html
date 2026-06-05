@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Szczegóły ładunku</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="row mb-3">
+        <div class="col d-flex align-items-center">
+            <a th:href="@{/cargos}" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i> Powrót do listy
+            </a>
+            <h2 class="mb-0">Szczegóły ładunku</h2>
+        </div>
+        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+            <a th:href="@{/cargos/{id}/edit(id=${cargo.id})}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edytuj
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i>
+        <span th:text="${successMessage}">Sukces</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm border-start border-5 border-info">
+        <div class="card-body">
+            <h3 class="card-title fw-bold" th:text="${cargo.name}">Ładunek</h3>
+            <p class="mb-2">
+                <span class="badge bg-secondary" th:text="${cargo.cargoType.name}">Typ</span>
+            </p>
+            <hr>
+            <div class="row text-muted">
+                <div class="col-md-3">
+                    <i class="bi bi-box me-1"></i> Paczki:
+                    <strong th:text="${cargo.packagesCount}">0</strong>
+                </div>
+                <div class="col-md-3">
+                    <i class="bi bi-cash me-1"></i> Wartość:
+                    <strong th:text="${cargo.estimatedValue}">0.00</strong>
+                </div>
+                <div class="col-md-3">
+                    <i class="bi bi-building me-1"></i> Magazyn:
+                    <strong th:text="${cargo.warehouse != null ? cargo.warehouse.name : 'Brak'}">Magazyn</strong>
+                </div>
+                <div class="col-md-3">
+                    <i class="bi bi-clock-history me-1"></i> Utworzono:
+                    <strong th:text="${cargo.createdAt}">Data</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
