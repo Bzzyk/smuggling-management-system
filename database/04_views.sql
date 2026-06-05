@@ -133,6 +133,30 @@ WHERE v.available = TRUE
   );
 
 
+-- AVAILABLE_CARGO
+
+
+-- Dostepne ladunki
+-- Ladunek jest dostepny, jesli nie jest jeszcze przypisany do transportu.
+
+CREATE OR REPLACE VIEW v_available_cargo AS
+SELECT
+    c.id AS cargo_id,
+    c.order_id,
+    c.name,
+    ct.name AS cargo_type,
+    c.packages_count,
+    c.estimated_value,
+    w.id AS warehouse_id,
+    w.name AS warehouse_name
+FROM cargo c
+JOIN cargo_types ct
+    ON ct.id = c.cargo_type_id
+LEFT JOIN warehouses w
+    ON w.id = c.warehouse_id
+WHERE c.transport_id IS NULL;
+
+
 -- ACTIVE_TRANSPORTS
 
 

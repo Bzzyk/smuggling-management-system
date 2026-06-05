@@ -131,6 +131,13 @@ ograniczenia `CHECK` oraz indeksy. Przykladowo:
   liczba paczek i kwoty platnosci, musza byc dodatnie,
 - daty transportu sa sprawdzane tak, aby planowana data przyjazdu nie byla
   wczesniejsza od daty transportu.
+- przypisanie pojazdu, ladunku i przemytnika do transportu jest dodatkowo
+  kontrolowane przez procedury oraz triggery bazodanowe,
+- rozpoczecie transportu wymaga kompletnego skladu: pojazdu, ladunku i co
+  najmniej jednego aktywnego przemytnika,
+- baza pilnuje, aby ladunek nie przekroczyl ladownosci przypisanego pojazdu,
+- baza pilnuje, aby przemytnik lub pojazd nie byl jednoczesnie uzywany w
+  innym aktywnym transporcie.
 
 ## Historia zmian
 
@@ -140,14 +147,18 @@ uzytkownika wykonujacego zmiane, date zmiany oraz poprzednia i nowa wartosc.
 
 ## Widoki modulu transportowego
 
-W module transportowym przewidziano widoki pomocnicze, ktore ulatwiaja
+W module transportowym zastosowano widoki pomocnicze, ktore ulatwiaja
 wyszukiwanie dostepnych zasobow, przeglad aktywnych transportow oraz wybor
-trasy.
+trasy. Widoki `v_available_*` sa wykorzystywane w aplikacji w selektorach
+pojazdow, ladunkow i przemytnikow. Dzieki temu aplikacja nie pobiera wszystkich
+rekordow z tabel, tylko pracuje na danych juz wstepnie odfiltrowanych przez
+baze danych.
 
 | Widok                   | Opis                                                                                   |
 | ----------------------- | -------------------------------------------------------------------------------------- |
-| `v_available_smugglers` | Lista aktywnych przemytnikow, ktorzy nie sa przypisani do aktywnego transportu.        |
-| `v_available_vehicles`  | Lista pojazdow dostepnych i nieuzywanych w aktywnych transportach.                     |
+| `v_available_smugglers` | Lista aktywnych przemytnikow, ktorzy nie sa przypisani do aktywnego transportu. Widok wylicza takze `success_rate_percent` na podstawie liczby zakonczonych i nieudanych transportow. |
+| `v_available_vehicles`  | Lista pojazdow oznaczonych jako dostepne i nieuzywanych w aktywnych transportach.      |
+| `v_available_cargo`     | Lista ladunkow, ktore nie sa jeszcze przypisane do transportu.                         |
 | `v_active_transports`   | Lista transportow o statusie `ZAPLANOWANY` lub `W_DRODZE`.                             |
 | `v_transport_details`   | Szczegolowy widok transportu z trasa, pojazdem, statusem i przypisanymi przemytnikami. |
 | `v_route_summary`       | Podsumowanie tras z dystansem, poziomem trudnosci i kategoria ryzyka.                  |
@@ -155,12 +166,18 @@ trasy.
 ## Funkcje modulu transportowego
 
 W module transportowym przewidziano funkcje obliczeniowe wykorzystywane przy
-planowaniu i ocenie transportu.
+planowaniu i ocenie transportu. Aplikacja prezentuje ich wyniki w panelu
+transportu, gdzie po zmianie ladunku, pojazdu lub ekipy mozna zobaczyc
+zaktualizowane ryzyko oraz koszt operacyjny.
 
 | Funkcja                                               | Opis                                                                                                                          |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `calculate_transport_risk_score(p_transport_id)`      | Oblicza punktowy poziom ryzyka transportu w skali 0-100 na podstawie trasy, dystansu, pojazdu oraz przypisanych przemytnikow. |
-| `estimate_transport_operational_cost(p_transport_id)` | Oblicza szacunkowy koszt operacyjny transportu na potrzeby planowania. Uwzglednia dystans, typ pojazdu, ryzyko trasy oraz doswiadczenie przypisanych przemytnikow. |
+| `calculate_transport_risk_score(p_transport_id)`      | Oblicza punktowy poziom ryzyka transportu w skali 0-100. Uwzglednia trudnosc trasy, dystans, typ pojazdu, liczbe paczek, wartosc ladunku oraz doswiadczenie i skutecznosc przypisanych przemytnikow. |
+| `estimate_transport_operational_cost(p_transport_id)` | Oblicza szacunkowy koszt operacyjny transportu. Uwzglednia dystans, typ pojazdu, ryzyko trasy, liczbe paczek, wartosc ladunku oraz doswiadczenie przypisanych przemytnikow. |
+
+Przewidywany zysk widoczny w panelu transportu jest wyliczany po stronie
+aplikacji jako suma wartosci przypisanych ladunkow pomniejszona o koszt
+operacyjny zwrocony przez funkcje `estimate_transport_operational_cost`.
 
 ## Procedury modulu transportowego
 
@@ -169,9 +186,10 @@ wykonywane razem z kontrola warunkow biznesowych po stronie bazy danych.
 
 | Procedura                                                         | Opis                                                                                                                      |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `assign_smuggler_to_transport(p_transport_id, p_smuggler_id, p_note)` | Przypisuje aktywnego przemytnika do aktywnego transportu. Sprawdza, czy przemytnik nie ma juz innego aktywnego transportu. |
-| `assign_vehicle_to_transport(p_transport_id, p_vehicle_id)`       | Przypisuje dostepny pojazd do aktywnego transportu. Sprawdza, czy pojazd nie jest uzywany w innym aktywnym transporcie.   |
-| `change_transport_status(p_transport_id, p_status_name)`          | Zmienia status transportu na podstawie wartosci ze slownika `transport_statuses`. Pilnuje dozwolonych przejsc statusow oraz wymaga pojazdu i przemytnika przy rozpoczeciu transportu. |
+| `assign_smuggler_to_transport(p_transport_id, p_smuggler_id, p_note)` | Przypisuje aktywnego przemytnika do zaplanowanego transportu. Sprawdza, czy transport istnieje, czy przemytnik jest aktywny i czy nie ma juz innego aktywnego transportu. |
+| `assign_vehicle_to_transport(p_transport_id, p_vehicle_id)`       | Przypisuje dostepny pojazd do zaplanowanego transportu. Sprawdza dostepnosc pojazdu, brak innego aktywnego transportu oraz ladownosc wzgledem aktualnego ladunku. |
+| `assign_cargo_to_transport(p_transport_id, p_cargo_id)`           | Przypisuje wolny ladunek do zaplanowanego transportu. Sprawdza, czy ladunek nie jest w innym transporcie, czy pasuje do zlecenia oraz czy po dodaniu nie przekroczy ladownosci pojazdu. |
+| `change_transport_status(p_transport_id, p_status_name)`          | Zmienia status transportu na podstawie wartosci ze slownika `transport_statuses`. Pilnuje dozwolonych przejsc statusow oraz wymaga pojazdu, ladunku i przemytnika przy rozpoczeciu transportu. |
 
 ## Triggery modulu transportowego
 
@@ -182,6 +200,37 @@ zostanie wykonana przez procedure, aplikacje czy reczny SQL.
 | Trigger                                                  | Tabela                  | Opis                                                                                                 |
 | -------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
 | `trg_set_transport_updated_at`                           | `transports`            | Ustawia `updated_at` przy kazdej aktualizacji transportu.                                             |
-| `trg_validate_transport_status_change`                   | `transports`            | Pilnuje dozwolonych przejsc statusow transportu oraz wymaga pojazdu i przemytnika przy rozpoczeciu transportu. |
+| `trg_validate_transport_status_change`                   | `transports`            | Pilnuje dozwolonych przejsc statusow transportu oraz wymaga pojazdu, ladunku i przemytnika przy rozpoczeciu transportu. Sprawdza tez, czy ladunek miesci sie w pojezdzie. |
 | `trg_validate_smuggler_assignment`                       | `smuggler_assignments`  | Blokuje aktywne przypisanie przemytnika do transportu innego niz `ZAPLANOWANY` oraz blokuje zajetego lub nieaktywnego przemytnika. |
 | `trg_close_transport_assignments_and_update_stats`       | `transports`            | Po zmianie statusu na `DOSTARCZONY`, `NIEUDANY` albo `ANULOWANY` dezaktywuje przypisania, a dla sukcesu lub porazki aktualizuje statystyki przemytnikow. |
+
+## Widoki magazynowo-finansowe
+
+Poza modulem transportowym baza zawiera widoki wykorzystywane w obszarze
+magazynow i raportow finansowych.
+
+| Widok                | Opis                                                                 |
+| -------------------- | -------------------------------------------------------------------- |
+| `v_warehouse_stock`  | Pokazuje aktualny stan magazynow razem z nazwa magazynu, lokalizacja, ladunkiem, typem ladunku, iloscia i wartoscia. |
+| `v_profit_report`    | Pokazuje przychody, koszty oraz zysk netto dla zlecen na podstawie oplaconych platnosci. |
+
+## Funkcje ladunkow i finansow
+
+| Funkcja                              | Opis                                                                 |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| `calculate_cargo_value(p_cargo_id)`  | Zwraca szacowana wartosc wskazanego ladunku na podstawie pola `estimated_value`. |
+| `calculate_order_profit(p_order_id)` | Oblicza zysk ze zlecenia na podstawie oplaconych platnosci typu `PRZYCHOD`, `KOSZT` i `PROWIZJA`. |
+
+## Procedury magazynowo-finansowe
+
+| Procedura                                                          | Opis                                                                 |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `add_cargo_to_warehouse(p_warehouse_id, p_cargo_id, p_quantity)`   | Dodaje ladunek do magazynu albo zwieksza istniejacy stan magazynowy. Aktualizuje tez magazyn przypisany do ladunku. |
+| `register_payment(p_order_id, p_amount, p_payment_type, p_status_id, p_description)` | Rejestruje platnosc dla zlecenia z podanym typem, statusem i opcjonalnym opisem. |
+
+## Triggery magazynowo-finansowe
+
+| Trigger                        | Tabela            | Opis                                                                 |
+| ------------------------------ | ----------------- | -------------------------------------------------------------------- |
+| `trg_check_warehouse_capacity` | `warehouse_stock` | Blokuje dodanie lub aktualizacje stanu magazynowego, jezeli suma ilosci przekroczylaby maksymalna pojemnosc magazynu. |
+| `trg_audit_payments`           | `payments`        | Zapisuje audyt dodania, usuniecia oraz zmiany statusu platnosci w tabeli `payments_audit`. |

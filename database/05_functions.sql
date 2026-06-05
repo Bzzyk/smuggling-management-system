@@ -81,14 +81,17 @@ DECLARE
     v_risk_level INT;
     v_distance_km NUMERIC(8, 2);
     v_vehicle_type VARCHAR(30);
+    v_packages_count INT;
+    v_cargo_value NUMERIC(12, 2);
     v_base_score NUMERIC(8, 2);
     v_distance_modifier NUMERIC(8, 2) := 0;
     v_vehicle_modifier NUMERIC(8, 2) := 0;
+    v_cargo_modifier NUMERIC(8, 2) := 0;
     v_smuggler_modifier NUMERIC(8, 2) := 0;
     v_result NUMERIC(8, 2);
 BEGIN
     SELECT
-        rdl.risk_level,
+        COALESCE(rdl.risk_level, 3),
         COALESCE(r.distance_km, 0),
         v.vehicle_type
     INTO
@@ -96,16 +99,16 @@ BEGIN
         v_distance_km,
         v_vehicle_type
     FROM transports t
-    JOIN routes r
+    LEFT JOIN routes r
         ON r.id = t.route_id
-    JOIN route_difficulty_levels rdl
+    LEFT JOIN route_difficulty_levels rdl
         ON rdl.id = r.difficulty_level_id
     LEFT JOIN vehicles v
         ON v.id = t.vehicle_id
     WHERE t.id = p_transport_id;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Transport o id % nie istnieje albo nie ma przypisanej trasy', p_transport_id;
+        RAISE EXCEPTION 'Transport o id % nie istnieje', p_transport_id;
     END IF;
 
     v_base_score := v_risk_level * 15;
@@ -123,6 +126,28 @@ BEGIN
         WHEN 'BUS' THEN 10
         WHEN 'CIEZAROWKA' THEN 16
         ELSE 8
+    END;
+
+    SELECT
+        COALESCE(SUM(packages_count), 0),
+        COALESCE(SUM(estimated_value), 0)
+    INTO
+        v_packages_count,
+        v_cargo_value
+    FROM cargo
+    WHERE transport_id = p_transport_id;
+
+    v_cargo_modifier := CASE
+        WHEN v_packages_count >= 3000 THEN 18
+        WHEN v_packages_count >= 1500 THEN 12
+        WHEN v_packages_count >= 500 THEN 6
+        ELSE 0
+    END
+    +
+    CASE
+        WHEN v_cargo_value >= 1000000 THEN 10
+        WHEN v_cargo_value >= 250000 THEN 5
+        ELSE 0
     END;
 
     SELECT COALESCE(SUM(
@@ -155,6 +180,7 @@ BEGIN
     v_result := v_base_score
         + v_distance_modifier
         + v_vehicle_modifier
+        + v_cargo_modifier
         + v_smuggler_modifier;
 
     RETURN ROUND(LEAST(GREATEST(v_result, 0), 100), 2);
@@ -179,31 +205,34 @@ DECLARE
     v_distance_km NUMERIC(8, 2);
     v_risk_level INT;
     v_vehicle_type VARCHAR(30);
+    v_packages_count INT;
+    v_cargo_value NUMERIC(12, 2);
     v_rate_per_km NUMERIC(8, 2);
     v_risk_multiplier NUMERIC(8, 2);
     v_base_fee NUMERIC(8, 2);
+    v_cargo_fee NUMERIC(12, 2);
     v_smuggler_fee NUMERIC(12, 2);
     v_result NUMERIC(12, 2);
 BEGIN
     SELECT
         COALESCE(r.distance_km, 0),
-        rdl.risk_level,
+        COALESCE(rdl.risk_level, 3),
         v.vehicle_type
     INTO
         v_distance_km,
         v_risk_level,
         v_vehicle_type
     FROM transports t
-    JOIN routes r
+    LEFT JOIN routes r
         ON r.id = t.route_id
-    JOIN route_difficulty_levels rdl
+    LEFT JOIN route_difficulty_levels rdl
         ON rdl.id = r.difficulty_level_id
     LEFT JOIN vehicles v
         ON v.id = t.vehicle_id
     WHERE t.id = p_transport_id;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Transport o id % nie istnieje albo nie ma przypisanej trasy', p_transport_id;
+        RAISE EXCEPTION 'Transport o id % nie istnieje', p_transport_id;
     END IF;
 
     v_rate_per_km := CASE v_vehicle_type
@@ -223,6 +252,22 @@ BEGIN
         ELSE 200
     END;
 
+    SELECT
+        COALESCE(SUM(packages_count), 0),
+        COALESCE(SUM(estimated_value), 0)
+    INTO
+        v_packages_count,
+        v_cargo_value
+    FROM cargo
+    WHERE transport_id = p_transport_id;
+
+    v_cargo_fee := (v_packages_count * 5)
+        + CASE
+            WHEN v_cargo_value >= 1000000 THEN 1000
+            WHEN v_cargo_value >= 250000 THEN 400
+            ELSE 0
+        END;
+
     SELECT COALESCE(SUM(
         CASE sp.experience_level
             WHEN 'JUNIOR' THEN 150
@@ -241,6 +286,7 @@ BEGIN
 
     v_result := v_base_fee
         + (v_distance_km * v_rate_per_km * v_risk_multiplier)
+        + v_cargo_fee
         + v_smuggler_fee;
 
     RETURN ROUND(v_result, 2);

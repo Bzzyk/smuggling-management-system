@@ -1,147 +1,242 @@
 <!DOCTYPE html>
 <html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Szczegóły Transportu</title>
+    <title>Panel transportu</title>
 </head>
 <body>
 <div layout:fragment="content" class="container mt-4">
-    <div class="row mb-3">
+    <div class="row mb-3 align-items-center">
         <div class="col d-flex align-items-center">
-            <a th:href="@{/transports}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i> Powrót</a>
-            <h2 class="mb-0">Panel Operacyjny Transportu</h2>
+            <a th:href="@{/orders/{id}(id=${transport.order.id})}" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i> Zlecenie
+            </a>
+            <div>
+                <h2 class="mb-0">Panel transportu</h2>
+                <div class="text-muted" th:text="${transport.order.title}">Zlecenie</div>
+            </div>
         </div>
         <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-            <a th:href="@{/transports/{id}/edit(id=${transport.id})}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edytuj parametry</a>
+            <a th:href="@{/transports/{id}/edit(id=${transport.id})}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Edytuj plan
+            </a>
         </div>
     </div>
 
-    <!-- Alerty -->
     <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle me-1"></i>
         <span th:text="${successMessage}">Sukces</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle me-1"></i>
-        <span th:text="${errorMessage}">Błąd</span>
+        <span th:text="${errorMessage}">Blad</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
     <div class="row g-4">
-        <!-- Karta z informacjami -->
-        <div class="col-lg-6">
+        <div class="col-lg-5">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0"><i class="bi bi-info-square me-2"></i> Dane Logistyczne</h5>
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Plan</h5>
+                    <span class="badge" th:classappend="${transport.status.name == 'ZAPLANOWANY' ? 'bg-info text-dark' : (transport.status.name == 'W_DRODZE' ? 'bg-primary' : (transport.status.name == 'DOSTARCZONY' ? 'bg-success' : 'bg-danger'))}"
+                          th:text="${transport.status.name}">STATUS</span>
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless">
-                        <tbody>
-                            <tr>
-                                <th class="w-25 text-muted">Status:</th>
-                                <td>
-                                    <span class="badge fs-6" th:classappend="${transport.status.name == 'DOSTARCZONY' ? 'bg-success' : (transport.status.name == 'ZAPLANOWANY' ? 'bg-info text-dark' : (transport.status.name == 'W_DRODZE' ? 'bg-primary' : 'bg-danger'))}"
-                                          th:text="${transport.status.name}">STATUS</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Zlecenie:</th>
-                                <td><strong th:text="${transport.order.title}">Nazwa</strong></td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Termin:</th>
-                                <td>
-                                    <i class="bi bi-calendar-event me-1"></i>
-                                    <span th:text="${transport.transportDate}">Data</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Trasa:</th>
-                                <td>
-                                    <span th:if="${transport.route != null}" th:text="${transport.route.name}">Szlak</span>
-                                    <span th:if="${transport.route == null}" class="fst-italic text-muted">Brak narzuconej trasy</span>
-                                    <br>
-                                    <small class="text-muted">
-                                        <i class="bi bi-geo-alt-fill text-danger"></i> <span th:text="${transport.startLocation}">A</span>
-                                        <i class="bi bi-arrow-right mx-1"></i>
-                                        <i class="bi bi-geo-alt-fill text-success"></i> <span th:text="${transport.destination}">B</span>
-                                    </small>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Pojazd:</th>
-                                <td>
-                                    <span th:if="${transport.vehicle != null}">
-                                        <i class="bi bi-truck me-1"></i>
-                                        <span th:text="${transport.vehicle.brand + ' ' + transport.vehicle.model}">Wóz</span>
-                                        <span class="badge bg-secondary ms-1" th:text="${transport.vehicle.registrationNumber}">REJ</span>
-                                    </span>
-                                    <span th:if="${transport.vehicle == null}" class="fst-italic text-muted">Oczekuje na przypisanie maszyny</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Notatki:</th>
-                                <td><em th:text="${transport.description ?: 'Brak'}">Brak</em></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Termin</dt>
+                        <dd class="col-sm-8" th:text="${transport.transportDate}">2026-01-01</dd>
+
+                        <dt class="col-sm-4">Przyjazd</dt>
+                        <dd class="col-sm-8" th:text="${transport.plannedArrivalDate != null ? transport.plannedArrivalDate : '-'}">-</dd>
+
+                        <dt class="col-sm-4">Trasa</dt>
+                        <dd class="col-sm-8">
+                            <span th:if="${transport.route != null}" th:text="${transport.route.name}">Trasa</span>
+                            <span th:if="${transport.route == null}" class="text-muted">Brak trasy katalogowej</span>
+                            <div class="small text-muted">
+                                <span th:text="${transport.startLocation}">A</span>
+                                <i class="bi bi-arrow-right mx-1"></i>
+                                <span th:text="${transport.destination}">B</span>
+                            </div>
+                        </dd>
+
+                        <dt class="col-sm-4">Notatki</dt>
+                        <dd class="col-sm-8" th:text="${transport.description ?: '-'}">-</dd>
+                    </dl>
+                </div>
+                <div class="card-footer bg-white" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+                    <div th:if="${transport.status.name == 'ZAPLANOWANY'}" class="d-grid gap-2">
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="W_DRODZE">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-play-fill"></i> Rozpocznij transport
+                            </button>
+                        </form>
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="ANULOWANY">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-x-circle"></i> Anuluj transport
+                            </button>
+                        </form>
+                    </div>
+                    <div th:if="${transport.status.name == 'W_DRODZE'}" class="d-grid gap-2">
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="DOSTARCZONY">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle"></i> Oznacz jako dostarczony
+                            </button>
+                        </form>
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="NIEUDANY">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="bi bi-exclamation-triangle"></i> Oznacz jako nieudany
+                            </button>
+                        </form>
+                        <form th:action="@{/transports/{id}/status(id=${transport.id})}" method="post">
+                            <input type="hidden" name="statusName" value="ANULOWANY">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-x-circle"></i> Anuluj transport
+                            </button>
+                        </form>
+                    </div>
+                    <div th:if="${transport.status.name != 'ZAPLANOWANY' && transport.status.name != 'W_DRODZE'}" class="text-muted small">
+                        Transport jest zakonczony i nie mozna juz zmienic jego statusu.
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Ekipa Transportowa -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100 border-primary border-top border-3">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-primary"><i class="bi bi-people-fill me-2"></i> Ekipa Biorąca Udział</h5>
-                    <span class="badge bg-primary rounded-pill" th:text="${assignments.size()}">0</span>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        <li th:each="assignment : ${assignments}" class="list-group-item d-flex justify-content-between align-items-center py-3">
-                            <div>
-                                <h6 class="mb-1 fw-bold">
-                                    <i class="bi bi-person-badge text-muted me-1"></i>
-                                    <span th:text="${assignment.smuggler.user.firstName + ' ' + assignment.smuggler.user.lastName}">Jan Kowalski</span>
-                                </h6>
-                                <small class="text-muted d-block" th:if="${assignment.note != null and !assignment.note.isEmpty()}">
-                                    <i class="bi bi-chat-left-text me-1"></i> <span th:text="${assignment.note}">Rola/Notatka</span>
-                                </small>
-                            </div>
-                            <div sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-                                <form th:action="@{/transports/{id}/unassign/{aid}(id=${transport.id}, aid=${assignment.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Usuń z ekipy" onclick="return confirm('Na pewno wyrzucić tego członka ekipy z transportu?');">
-                                        <i class="bi bi-person-x"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </li>
-                        <li th:if="${#lists.isEmpty(assignments)}" class="list-group-item text-center py-4 text-muted">
-                            <i class="bi bi-exclamation-circle d-block mb-2 fs-3 text-warning"></i>
-                            Transport nie posiada jeszcze ekipy przydzielonej do zadania!
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- Formularz dodawania -->
-                <div class="card-footer bg-light p-3" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-                    <form th:action="@{/transports/{id}/assign(id=${transport.id})}" method="post">
-                        <div class="row g-2">
-                            <div class="col-sm-5">
-                                <select name="smugglerId" class="form-select form-select-sm" required>
-                                    <option value="" disabled selected>Wybierz profil...</option>
-                                    <option th:each="profile : ${allSmugglers}" th:value="${profile.userId}" 
-                                            th:text="${profile.user.firstName + ' ' + profile.user.lastName + ' (' + profile.experienceLevel + ')'}"></option>
-                                </select>
-                            </div>
-                            <div class="col-sm-4">
-                                <input type="text" name="note" class="form-control form-control-sm" placeholder="Rola / Zbrojenie">
-                            </div>
-                            <div class="col-sm-3">
-                                <button type="submit" class="btn btn-sm btn-primary w-100">Dodaj</button>
+        <div class="col-lg-7">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-top border-4 border-warning">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Kalkulacja z bazy</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row row-cols-1 row-cols-md-4 g-3 text-center">
+                                <div class="col">
+                                    <div class="text-muted small text-uppercase">Ryzyko</div>
+                                    <div class="h3 fw-bold mb-0"
+                                         th:classappend="${transportEstimate.riskScore >= 70 ? 'text-danger' : (transportEstimate.riskScore >= 40 ? 'text-warning' : 'text-success')}"
+                                         th:text="${transportEstimate.riskScore}">0.00</div>
+                                    <div class="small text-muted">calculate_transport_risk_score</div>
+                                </div>
+                                <div class="col">
+                                    <div class="text-muted small text-uppercase">Wartosc ladunku</div>
+                                    <div class="h3 fw-bold mb-0 text-dark">
+                                        $<span th:text="${transportEstimate.cargoValue}">0.00</span>
+                                    </div>
+                                    <div class="small text-muted">suma estimatedValue</div>
+                                </div>
+                                <div class="col">
+                                    <div class="text-muted small text-uppercase">Koszt operacyjny</div>
+                                    <div class="h3 fw-bold mb-0 text-primary">
+                                        $<span th:text="${transportEstimate.operationalCost}">0.00</span>
+                                    </div>
+                                    <div class="small text-muted">estimate_transport_operational_cost</div>
+                                </div>
+                                <div class="col">
+                                    <div class="text-muted small text-uppercase">Przewidywany zysk</div>
+                                    <div class="h3 fw-bold mb-0"
+                                         th:classappend="${transportEstimate.predictedProfit < 0 ? 'text-danger' : 'text-success'}">
+                                        $<span th:text="${transportEstimate.predictedProfit}">0.00</span>
+                                    </div>
+                                    <div class="small text-muted">ladunek - koszt</div>
+                                </div>
                             </div>
                         </div>
-                    </form>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Pojazd</h5>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:href="@{/transports/{id}/vehicles(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Wybierz</a>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${transport.vehicle != null}">
+                                <div class="fw-bold" th:text="${transport.vehicle.brand + ' ' + transport.vehicle.model}">Pojazd</div>
+                                <div class="text-muted" th:text="${transport.vehicle.registrationNumber}">BI12345</div>
+                                <div class="mt-2">
+                                    Ladownosc:
+                                    <strong th:text="${transport.vehicle.loadCapacity}">0</strong>
+                                    paczek
+                                </div>
+                                <div class="mt-2">
+                                    <span th:if="${vehicleCapacityOk}" class="badge bg-success">Miesci ladunek</span>
+                                    <span th:unless="${vehicleCapacityOk}" class="badge bg-danger">Za mala ladownosc</span>
+                                </div>
+                            </div>
+                            <div th:if="${transport.vehicle == null}" class="text-muted">
+                                Brak pojazdu. Przypisanie przejdzie przez procedure `assign_vehicle_to_transport`.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Ladunek</h5>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:href="@{/transports/{id}/cargos(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Dodaj</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                Suma paczek:
+                                <strong th:text="${cargoPackagesTotal}">0</strong>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li th:each="cargo : ${cargos}" class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold" th:text="${cargo.name}">Ladunek</div>
+                                        <small class="text-muted"><span th:text="${cargo.packagesCount}">0</span> paczek</small>
+                                    </div>
+                                    <form sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:action="@{/transports/{id}/cargos/{cargoId}/unassign(id=${transport.id}, cargoId=${cargo.id})}" method="post">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+                                    </form>
+                                </li>
+                                <li th:if="${#lists.isEmpty(cargos)}" class="list-group-item px-0 text-muted">Brak ladunku.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Ekipa</h5>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:href="@{/transports/{id}/smugglers(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Dodaj przemytnika</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>Osoba</th>
+                                    <th>Doswiadczenie</th>
+                                    <th>Notatka</th>
+                                    <th class="text-end">Akcje</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="assignment : ${assignments}">
+                                    <td th:text="${assignment.smuggler.user.firstName + ' ' + assignment.smuggler.user.lastName}">Jan Kowalski</td>
+                                    <td th:text="${assignment.smuggler.experienceLevel}">SENIOR</td>
+                                    <td th:text="${assignment.note ?: '-'}">-</td>
+                                    <td class="text-end">
+                                        <form sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:action="@{/transports/{id}/unassign/{aid}(id=${transport.id}, aid=${assignment.id})}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-person-x"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(assignments)}">
+                                    <td colspan="4" class="text-center text-muted py-4">Brak przypisanej ekipy.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
