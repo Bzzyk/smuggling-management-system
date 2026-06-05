@@ -88,6 +88,29 @@ BEGIN
         RAISE EXCEPTION 'Nie mozna rozpoczac transportu % bez przypisanego przemytnika', NEW.id;
     END IF;
 
+    IF v_new_status = 'W_DRODZE'
+       AND NOT EXISTS (
+           SELECT 1
+           FROM cargo
+           WHERE transport_id = NEW.id
+       ) THEN
+        RAISE EXCEPTION 'Nie mozna rozpoczac transportu % bez przypisanego ladunku', NEW.id;
+    END IF;
+
+    IF v_new_status = 'W_DRODZE'
+       AND EXISTS (
+           SELECT 1
+           FROM vehicles v
+           WHERE v.id = NEW.vehicle_id
+             AND v.load_capacity < (
+                 SELECT COALESCE(SUM(c.packages_count), 0)
+                 FROM cargo c
+                 WHERE c.transport_id = NEW.id
+             )
+       ) THEN
+        RAISE EXCEPTION 'Nie mozna rozpoczac transportu %. Ladunek przekracza ladownosc pojazdu', NEW.id;
+    END IF;
+
     RETURN NEW;
 END;
 $$;
@@ -268,6 +291,8 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_check_warehouse_capacity ON warehouse_stock;
+
 CREATE TRIGGER trg_check_warehouse_capacity
 BEFORE INSERT OR UPDATE ON warehouse_stock
 FOR EACH ROW EXECUTE FUNCTION check_warehouse_capacity_func();
@@ -312,6 +337,8 @@ BEGIN
     RETURN NULL;
 END;
 $$;
+
+DROP TRIGGER IF EXISTS trg_audit_payments ON payments;
 
 CREATE TRIGGER trg_audit_payments
 AFTER INSERT OR UPDATE OR DELETE ON payments

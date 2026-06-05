@@ -1,25 +1,19 @@
 package pl.edu.pb.smuggling.transport.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.edu.pb.smuggling.common.service.AuditLogService;
 import pl.edu.pb.smuggling.order.model.SmugglingOrder;
 import pl.edu.pb.smuggling.order.repository.SmugglingOrderRepository;
 import pl.edu.pb.smuggling.transport.dto.TransportFormDto;
 import pl.edu.pb.smuggling.transport.model.Route;
 import pl.edu.pb.smuggling.transport.model.Transport;
 import pl.edu.pb.smuggling.transport.model.TransportStatus;
-import pl.edu.pb.smuggling.transport.model.Vehicle;
 import pl.edu.pb.smuggling.transport.repository.RouteRepository;
 import pl.edu.pb.smuggling.transport.repository.TransportRepository;
 import pl.edu.pb.smuggling.transport.repository.TransportStatusRepository;
-import pl.edu.pb.smuggling.transport.repository.VehicleRepository;
-import pl.edu.pb.smuggling.transport.model.SmugglerAssignment;
-import pl.edu.pb.smuggling.transport.repository.SmugglerAssignmentRepository;
-import pl.edu.pb.smuggling.user.model.SmugglerProfile;
-import pl.edu.pb.smuggling.user.repository.SmugglerProfileRepository;
-
-import pl.edu.pb.smuggling.common.service.AuditLogService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,33 +23,27 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TransportService {
 
+    private static final String STATUS_PLANNED = "ZAPLANOWANY";
+    private static final String STATUS_ON_ROAD = "W_DRODZE";
+
     private final TransportRepository transportRepository;
     private final SmugglingOrderRepository smugglingOrderRepository;
     private final RouteRepository routeRepository;
-    private final VehicleRepository vehicleRepository;
     private final TransportStatusRepository transportStatusRepository;
-    private final SmugglerAssignmentRepository assignmentRepository;
-    private final SmugglerProfileRepository smugglerProfileRepository;
+    private final JdbcTemplate jdbcTemplate;
     private final AuditLogService auditLogService;
 
     public List<Transport> getAllTransports() {
         return transportRepository.findAll();
     }
 
-    public List<SmugglingOrder> getAllOrders() {
-        return smugglingOrderRepository.findAll();
+    public SmugglingOrder getOrderById(Integer id) {
+        return smugglingOrderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono zlecenia o ID: " + id));
     }
 
     public List<Route> getAllRoutes() {
         return routeRepository.findAll();
-    }
-
-    public List<Vehicle> getAllVehicles() {
-        return vehicleRepository.findAll();
-    }
-
-    public List<TransportStatus> getAllTransportStatuses() {
-        return transportStatusRepository.findAll();
     }
 
     public Transport getTransportById(Integer id) {
@@ -64,11 +52,17 @@ public class TransportService {
     }
 
     @Transactional
-    public void createTransport(TransportFormDto dto) {
+    public Transport createTransport(TransportFormDto dto) {
         Transport transport = new Transport();
         updateTransportFromDto(transport, dto);
+
+        TransportStatus plannedStatus = transportStatusRepository.findByName(STATUS_PLANNED)
+                .orElseThrow(() -> new IllegalArgumentException("Brak statusu ZAPLANOWANY w slowniku"));
+        transport.setStatus(plannedStatus);
+
         transport = transportRepository.save(transport);
         auditLogService.logAction("transports", transport.getId(), "CREATE", null, transportToMap(transport));
+        return transport;
     }
 
     @Transactional
@@ -88,6 +82,18 @@ public class TransportService {
         auditLogService.logAction("transports", transport.getId(), "DELETE", oldState, null);
     }
 
+    @Transactional
+    public void startTransport(Integer transportId) {
+        Transport transport = getTransportById(transportId);
+        Map<String, Object> oldState = transportToMap(transport);
+
+        jdbcTemplate.update("CALL change_transport_status(?, ?)", transportId, STATUS_ON_ROAD);
+
+        Map<String, Object> newState = new HashMap<>();
+        newState.put("status", STATUS_ON_ROAD);
+        auditLogService.logAction("transports", transportId, "CHANGE_STATUS", oldState, newState);
+    }
+
     private void updateTransportFromDto(Transport transport, TransportFormDto dto) {
         SmugglingOrder order = smugglingOrderRepository.findById(dto.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono zlecenia"));
@@ -101,60 +107,11 @@ public class TransportService {
             transport.setRoute(null);
         }
 
-        if (dto.getVehicleId() != null) {
-            Vehicle vehicle = vehicleRepository.findById(dto.getVehicleId())
-                    .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono pojazdu"));
-            transport.setVehicle(vehicle);
-        } else {
-            transport.setVehicle(null);
-        }
-
-        TransportStatus status = transportStatusRepository.findById(dto.getStatusId())
-                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono statusu transportu"));
-        transport.setStatus(status);
-
         transport.setStartLocation(dto.getStartLocation());
         transport.setDestination(dto.getDestination());
         transport.setTransportDate(dto.getTransportDate());
         transport.setPlannedArrivalDate(dto.getPlannedArrivalDate());
         transport.setDescription(dto.getDescription());
-    }
-
-    public List<SmugglerAssignment> getAssignmentsForTransport(Integer transportId) {
-        return assignmentRepository.findByTransportId(transportId);
-    }
-
-    public List<SmugglerProfile> getAllSmugglers() {
-        return smugglerProfileRepository.findAll();
-    }
-
-    @Transactional
-    public void assignSmuggler(Integer transportId, Integer smugglerId, String note) {
-        Transport transport = getTransportById(transportId);
-        SmugglerProfile smuggler = smugglerProfileRepository.findById(smugglerId)
-                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono profilu przemytnika"));
-
-        boolean alreadyAssigned = getAssignmentsForTransport(transportId).stream()
-                .anyMatch(a -> a.getSmuggler().getUserId().equals(smugglerId));
-        if (alreadyAssigned) {
-            throw new IllegalArgumentException("Ten przemytnik jest już przypisany do tego transportu.");
-        }
-
-        SmugglerAssignment assignment = new SmugglerAssignment();
-        assignment.setTransport(transport);
-        assignment.setSmuggler(smuggler);
-        assignment.setNote(note);
-        assignment.setActive(true);
-        assignment = assignmentRepository.save(assignment);
-        auditLogService.logAction("smuggler_assignments", assignment.getId(), "CREATE", null, assignmentToMap(assignment));
-    }
-
-    @Transactional
-    public void unassignSmuggler(Integer assignmentId) {
-        SmugglerAssignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
-        Map<String, Object> oldState = assignmentToMap(assignment);
-        assignmentRepository.deleteById(assignmentId);
-        auditLogService.logAction("smuggler_assignments", assignmentId, "DELETE", oldState, null);
     }
 
     private Map<String, Object> transportToMap(Transport transport) {
@@ -169,16 +126,6 @@ public class TransportService {
         map.put("transportDate", transport.getTransportDate());
         map.put("plannedArrivalDate", transport.getPlannedArrivalDate());
         map.put("description", transport.getDescription());
-        return map;
-    }
-
-    private Map<String, Object> assignmentToMap(SmugglerAssignment assignment) {
-        if (assignment == null) return null;
-        Map<String, Object> map = new HashMap<>();
-        map.put("transportId", assignment.getTransport() != null ? assignment.getTransport().getId() : null);
-        map.put("smugglerId", assignment.getSmuggler() != null ? assignment.getSmuggler().getUserId() : null);
-        map.put("note", assignment.getNote());
-        map.put("active", assignment.isActive());
         return map;
     }
 }

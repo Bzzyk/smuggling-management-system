@@ -117,6 +117,8 @@ AS $$
 DECLARE
     v_transport_status VARCHAR(30);
     v_vehicle_available BOOLEAN;
+    v_vehicle_capacity INT;
+    v_current_packages INT;
 BEGIN
     SELECT ts.name
     INTO v_transport_status
@@ -133,8 +135,8 @@ BEGIN
         RAISE EXCEPTION 'Nie mozna przypisac pojazdu do transportu o statusie %', v_transport_status;
     END IF;
 
-    SELECT available
-    INTO v_vehicle_available
+    SELECT available, load_capacity
+    INTO v_vehicle_available, v_vehicle_capacity
     FROM vehicles
     WHERE id = p_vehicle_id;
 
@@ -144,6 +146,16 @@ BEGIN
 
     IF v_vehicle_available = FALSE THEN
         RAISE EXCEPTION 'Pojazd o id % jest oznaczony jako niedostepny', p_vehicle_id;
+    END IF;
+
+    SELECT COALESCE(SUM(packages_count), 0)
+    INTO v_current_packages
+    FROM cargo
+    WHERE transport_id = p_transport_id;
+
+    IF v_current_packages > v_vehicle_capacity THEN
+        RAISE EXCEPTION 'Pojazd o id % ma za mala ladownosc. Ladownosc: %, ladunek: %',
+            p_vehicle_id, v_vehicle_capacity, v_current_packages;
     END IF;
 
     IF EXISTS (
@@ -161,6 +173,82 @@ BEGIN
     UPDATE transports
     SET vehicle_id = p_vehicle_id
     WHERE id = p_transport_id;
+END;
+$$;
+
+
+-- ASSIGN_CARGO_TO_TRANSPORT
+
+
+-- Procedura przypisuje wolny ladunek do zaplanowanego transportu.
+-- Jesli transport ma juz pojazd, procedura pilnuje, zeby suma paczek
+-- po dodaniu ladunku nie przekroczyla ladownosci pojazdu.
+
+CREATE OR REPLACE PROCEDURE assign_cargo_to_transport(
+    p_transport_id INT,
+    p_cargo_id INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_transport_status VARCHAR(30);
+    v_order_id INT;
+    v_vehicle_capacity INT;
+    v_current_packages INT;
+    v_cargo_packages INT;
+    v_existing_transport_id INT;
+    v_existing_order_id INT;
+BEGIN
+    SELECT ts.name, t.order_id, v.load_capacity
+    INTO v_transport_status, v_order_id, v_vehicle_capacity
+    FROM transports t
+    JOIN transport_statuses ts
+        ON ts.id = t.status_id
+    LEFT JOIN vehicles v
+        ON v.id = t.vehicle_id
+    WHERE t.id = p_transport_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Transport o id % nie istnieje', p_transport_id;
+    END IF;
+
+    IF v_transport_status <> 'ZAPLANOWANY' THEN
+        RAISE EXCEPTION 'Ladunek mozna przypisac tylko do zaplanowanego transportu. Aktualny status: %', v_transport_status;
+    END IF;
+
+    SELECT transport_id, order_id, packages_count
+    INTO v_existing_transport_id, v_existing_order_id, v_cargo_packages
+    FROM cargo
+    WHERE id = p_cargo_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Ladunek o id % nie istnieje', p_cargo_id;
+    END IF;
+
+    IF v_existing_transport_id IS NOT NULL AND v_existing_transport_id <> p_transport_id THEN
+        RAISE EXCEPTION 'Ladunek o id % jest juz przypisany do innego transportu', p_cargo_id;
+    END IF;
+
+    IF v_existing_order_id IS NOT NULL AND v_existing_order_id <> v_order_id THEN
+        RAISE EXCEPTION 'Ladunek o id % nalezy do innego zlecenia', p_cargo_id;
+    END IF;
+
+    SELECT COALESCE(SUM(packages_count), 0)
+    INTO v_current_packages
+    FROM cargo
+    WHERE transport_id = p_transport_id
+      AND id <> p_cargo_id;
+
+    IF v_vehicle_capacity IS NOT NULL
+       AND (v_current_packages + v_cargo_packages) > v_vehicle_capacity THEN
+        RAISE EXCEPTION 'Ladunek nie miesci sie w pojezdzie. Ladownosc: %, po dodaniu: %',
+            v_vehicle_capacity, (v_current_packages + v_cargo_packages);
+    END IF;
+
+    UPDATE cargo
+    SET transport_id = p_transport_id,
+        order_id = COALESCE(order_id, v_order_id)
+    WHERE id = p_cargo_id;
 END;
 $$;
 
@@ -229,8 +317,31 @@ BEGIN
            FROM smuggler_assignments
            WHERE transport_id = p_transport_id
              AND active = TRUE
-       ) THEN
+    ) THEN
         RAISE EXCEPTION 'Nie mozna rozpoczac transportu % bez przypisanego przemytnika', p_transport_id;
+    END IF;
+
+    IF p_status_name = 'W_DRODZE'
+       AND NOT EXISTS (
+           SELECT 1
+           FROM cargo
+           WHERE transport_id = p_transport_id
+       ) THEN
+        RAISE EXCEPTION 'Nie mozna rozpoczac transportu % bez przypisanego ladunku', p_transport_id;
+    END IF;
+
+    IF p_status_name = 'W_DRODZE'
+       AND EXISTS (
+           SELECT 1
+           FROM vehicles v
+           WHERE v.id = v_vehicle_id
+             AND v.load_capacity < (
+                 SELECT COALESCE(SUM(c.packages_count), 0)
+                 FROM cargo c
+                 WHERE c.transport_id = p_transport_id
+             )
+       ) THEN
+        RAISE EXCEPTION 'Nie mozna rozpoczac transportu %. Ladunek przekracza ladownosc pojazdu', p_transport_id;
     END IF;
 
     UPDATE transports

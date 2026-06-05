@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Wybór przemytnika</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Wybór przemytnika</h2>
+            <div class="text-muted" th:text="${transport.startLocation + ' -> ' + transport.destination}">Trasa</div>
+        </div>
+        <a th:href="@{/transports/{id}(id=${transport.id})}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Transport
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <form method="get" th:action="@{/transports/{id}/smugglers(id=${transport.id})}" class="row g-2 align-items-end">
+                <div class="col-sm-5 col-md-3">
+                    <label for="experienceLevel" class="form-label fw-bold">Doświadczenie</label>
+                    <select id="experienceLevel" name="experienceLevel" class="form-select">
+                        <option value="">Każde</option>
+                        <option th:each="level : ${experienceLevels}"
+                                th:value="${level}"
+                                th:selected="${selectedExperienceLevel == level}"
+                                th:text="${level}">SENIOR</option>
+                    </select>
+                </div>
+                <div class="col-sm-5 col-md-3">
+                    <label for="minSuccessRate" class="form-label fw-bold">Min. success rate</label>
+                    <input id="minSuccessRate" name="minSuccessRate" type="number" min="0" max="100" step="0.01"
+                           class="form-control" th:value="${selectedMinSuccessRate}">
+                </div>
+                <div class="col-sm-auto">
+                    <button type="submit" class="btn btn-primary">Filtruj</button>
+                    <a th:href="@{/transports/{id}/smugglers(id=${transport.id})}" class="btn btn-outline-secondary">Wyczyść</a>
+                </div>
+            </form>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Osoba</th>
+                        <th>Poziom</th>
+                        <th>Historia</th>
+                        <th>Notatka do przypisania</th>
+                        <th class="text-end">Akcja</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="profile : ${smugglers}">
+                        <td>
+                            <strong th:text="${profile.firstName + ' ' + profile.lastName}">Jan Kowalski</strong>
+                            <div class="small text-muted" th:text="${profile.username}">login</div>
+                        </td>
+                        <td th:text="${profile.experienceLevel}">SENIOR</td>
+                        <td>
+                            <span class="text-success" th:text="${profile.completedTransportsCount}">0</span>
+                            /
+                            <span class="text-danger" th:text="${profile.failedTransportsCount}">0</span>
+                            <div class="small text-muted">
+                                success:
+                                <span th:text="${profile.successRatePercent != null ? profile.successRatePercent + '%' : 'brak danych'}">-</span>
+                            </div>
+                        </td>
+                        <td>
+                            <form th:id="${'assign-smuggler-' + profile.smugglerId}"
+                                  th:action="@{/transports/{id}/smugglers/{smugglerId}/assign(id=${transport.id}, smugglerId=${profile.smugglerId})}"
+                                  method="post">
+                                <input type="text" name="note" class="form-control form-control-sm" maxlength="255">
+                            </form>
+                        </td>
+                        <td class="text-end">
+                            <button type="submit" class="btn btn-sm btn-success" th:form="${'assign-smuggler-' + profile.smugglerId}">
+                                <i class="bi bi-person-plus"></i> Przypisz
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(smugglers)}">
+                        <td colspan="5" class="text-center text-muted py-4">Brak aktywnych profili przemytnikow.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${smugglerPage.totalPages > 1}">
+            <a class="btn btn-outline-secondary btn-sm"
+               th:classappend="${smugglerPage.first} ? 'disabled'"
+               th:href="@{/transports/{id}/smugglers(id=${transport.id}, page=${smugglerPage.number - 1}, experienceLevel=${selectedExperienceLevel}, minSuccessRate=${selectedMinSuccessRate})}">Poprzednia</a>
+            <span>Strona <strong th:text="${smugglerPage.number + 1}">1</strong> z <strong th:text="${smugglerPage.totalPages}">1</strong></span>
+            <a class="btn btn-outline-secondary btn-sm"
+               th:classappend="${smugglerPage.last} ? 'disabled'"
+               th:href="@{/transports/{id}/smugglers(id=${transport.id}, page=${smugglerPage.number + 1}, experienceLevel=${selectedExperienceLevel}, minSuccessRate=${selectedMinSuccessRate})}">Nastepna</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

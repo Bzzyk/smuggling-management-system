@@ -18,11 +18,6 @@ public class TransportFormDto {
 
     private Integer routeId;
 
-    private Integer vehicleId;
-
-    @NotNull(message = "Status transportu jest wymagany")
-    private Integer statusId;
-
     @NotBlank(message = "Punkt startowy jest wymagany")
     @Size(max = 100, message = "Punkt startowy może mieć maksymalnie 100 znaków")
     private String startLocation;
