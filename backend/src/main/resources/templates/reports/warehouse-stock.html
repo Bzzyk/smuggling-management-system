@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Raport magazynowy</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="mb-3">
+        <h2>Raport stanów magazynowych</h2>
+        <p class="text-muted mb-0">Aktualne pozycje magazynowe z nazwą magazynu i ładunku.</p>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Magazyn</th>
+                        <th>Lokalizacja</th>
+                        <th>Ładunek</th>
+                        <th>Typ</th>
+                        <th>Ilość</th>
+                        <th>Szacowana wartość</th>
+                        <th>Dodano</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${rows}">
+                        <td>
+                            <strong th:text="${row.warehouseName()}">Magazyn</strong>
+                        </td>
+                        <td th:text="${row.location()}">Lokalizacja</td>
+                        <td th:text="${row.cargoName()}">Ładunek</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${row.cargoType()}">Typ</span>
+                        </td>
+                        <td class="fw-bold" th:text="${row.quantity()}">0</td>
+                        <td th:text="${row.estimatedValue()}">0.00</td>
+                        <td th:text="${row.addedAt()}">Data</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(rows)}">
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle"></i> Brak danych magazynowych.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
