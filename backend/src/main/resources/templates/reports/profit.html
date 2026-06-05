@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}">
+<head>
+    <title>Raport zysków</title>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <div class="mb-3">
+        <h2>Raport zysków i kosztów</h2>
+        <p class="text-muted mb-0">Zestawienie obejmuje tylko opłacone płatności.</p>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Zlecenie</th>
+                        <th>Przychody</th>
+                        <th>Koszty i prowizje</th>
+                        <th>Zysk netto</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${rows}">
+                        <td>
+                            <span class="text-muted">#</span><span th:text="${row.orderId()}">1</span>
+                            <strong class="ms-2" th:text="${row.orderTitle()}">Zlecenie</strong>
+                        </td>
+                        <td class="text-success fw-bold" th:text="${row.totalRevenue()}">0.00</td>
+                        <td class="text-danger fw-bold" th:text="${row.totalCosts()}">0.00</td>
+                        <td>
+                            <span class="fw-bold" th:classappend="${row.netProfit() != null and row.netProfit().signum() >= 0 ? 'text-success' : 'text-danger'}"
+                                  th:text="${row.netProfit()}">0.00</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(rows)}">
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle"></i> Brak danych do raportu.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
