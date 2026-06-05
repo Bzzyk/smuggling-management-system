@@ -1,48 +1,85 @@
 <!DOCTYPE html>
-<html lang="pl" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragments/layout}">
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Ładunki - SMS</title>
+    <title>Ładunki</title>
 </head>
 <body>
 <div layout:fragment="content" class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Ładunki</h1>
-            
-            <div class="card shadow">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nazwa</th>
-                                    <th>Typ</th>
-                                    <th>Ilość (paczki)</th>
-                                    <th>Wartość szacunkowa</th>
-                                    <th>Zlecenie</th>
-                                    <th>Magazyn</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="c : ${cargos}">
-                                    <td th:text="${c.id}"></td>
-                                    <td th:text="${c.name}"></td>
-                                    <td th:text="${c.cargoType.name}"></td>
-                                    <td th:text="${c.packagesCount}"></td>
-                                    <td th:text="${c.estimatedValue}"></td>
-                                    <td th:text="${c.order != null ? c.order.title : '-'}"></td>
-                                    <td th:text="${c.warehouse != null ? c.warehouse.name : '-'}"></td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(cargos)}">
-                                    <td colspan="7" class="text-center">Brak ładunków w systemie.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="row mb-3 align-items-center">
+        <div class="col">
+            <h2>Ładunki</h2>
+        </div>
+        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+            <a th:href="@{/cargos/create}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Dodaj ładunek
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i>
+        <span th:text="${successMessage}">Sukces</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        <span th:text="${errorMessage}">Błąd</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Nazwa</th>
+                        <th>Typ</th>
+                        <th>Paczki</th>
+                        <th>Wartość</th>
+                        <th>Magazyn</th>
+                        <th class="text-end">Akcje</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="cargo : ${cargos}">
+                        <td>
+                            <strong th:text="${cargo.name}">Ładunek</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${cargo.cargoType.name}">Typ</span>
+                        </td>
+                        <td th:text="${cargo.packagesCount}">0</td>
+                        <td th:text="${cargo.estimatedValue}">0.00</td>
+                        <td th:text="${cargo.warehouse != null ? cargo.warehouse.name : '-'}">Magazyn</td>
+                        <td class="text-end">
+                            <a th:href="@{/cargos/{id}(id=${cargo.id})}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i> Szczegóły
+                            </a>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')"
+                               th:href="@{/cargos/{id}/edit(id=${cargo.id})}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form sec:authorize="hasAnyRole('ADMIN', 'BOSS')"
+                                  th:action="@{/cargos/{id}/delete(id=${cargo.id})}"
+                                  method="post"
+                                  class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(cargos)}">
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle"></i> Brak ładunków w systemie.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-            
         </div>
     </div>
 </div>

@@ -46,6 +46,9 @@
                         <a class="nav-link" th:href="@{/cargos}">Ładunki</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'BOSS', 'ACCOUNTANT')">
+                        <a class="nav-link" th:href="@{/warehouses}">Magazyny</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'BOSS', 'ACCOUNTANT')">
                         <a class="nav-link" th:href="@{/payments}">Płatności</a>
                     </li>
                     <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'BOSS', 'ACCOUNTANT')">
