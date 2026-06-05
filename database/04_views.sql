@@ -5,6 +5,61 @@
 -- =========================================================
 
 -- =========================================================
+-- UZYTKOWNICY, ROLE, ZLECENIA
+-- =========================================================
+
+
+-- USER_PERMISSIONS
+
+
+-- Widok pokazuje przypisane role uzytkownikow.
+
+CREATE OR REPLACE VIEW v_user_permissions AS
+SELECT
+    u.id AS user_id,
+    u.username,
+    u.first_name,
+    u.last_name,
+    u.email,
+    u.enabled,
+    r.id AS role_id,
+    r.name AS role_name,
+    r.description AS role_description
+FROM users u
+JOIN user_roles ur
+    ON ur.user_id = u.id
+JOIN roles r
+    ON r.id = ur.role_id;
+
+
+-- ACTIVE_ORDERS
+
+
+-- Widok pokazuje zlecenia, ktore sa nowe albo w trakcie realizacji.
+
+CREATE OR REPLACE VIEW v_active_orders AS
+SELECT
+    o.id AS order_id,
+    o.title,
+    o.description,
+    os.name AS status_name,
+    o.created_at,
+    o.planned_date,
+    o.completed_at,
+    creator.username AS created_by_username,
+    responsible.username AS responsible_username,
+    o.estimated_profit
+FROM orders o
+JOIN order_statuses os
+    ON os.id = o.status_id
+JOIN users creator
+    ON creator.id = o.created_by_user_id
+LEFT JOIN users responsible
+    ON responsible.id = o.responsible_user_id
+WHERE os.name IN ('NOWE', 'W_TRAKCIE');
+
+
+-- =========================================================
 -- TRANSPORTY, TRASY, POJAZDY, PRZYPISANIE PRZEMYTNIKOW
 -- =========================================================
 

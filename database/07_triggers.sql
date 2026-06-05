@@ -5,6 +5,87 @@
 -- =========================================================
 
 -- =========================================================
+-- UZYTKOWNICY, ROLE, ZLECENIA, HISTORIA ZMIAN
+-- =========================================================
+
+
+-- AUDIT_ORDERS
+
+
+-- Trigger zapisuje zmiany w tabeli orders do audit_logs.
+
+CREATE OR REPLACE FUNCTION audit_orders_func()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO audit_logs (table_name, record_id, action, changed_by_user_id, old_value, new_value)
+        VALUES ('orders', NEW.id, 'INSERT', NULL, NULL, row_to_json(NEW)::TEXT);
+        RETURN NEW;
+
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO audit_logs (table_name, record_id, action, changed_by_user_id, old_value, new_value)
+        VALUES ('orders', NEW.id, 'UPDATE', NULL, row_to_json(OLD)::TEXT, row_to_json(NEW)::TEXT);
+        RETURN NEW;
+
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO audit_logs (table_name, record_id, action, changed_by_user_id, old_value, new_value)
+        VALUES ('orders', OLD.id, 'DELETE', NULL, row_to_json(OLD)::TEXT, NULL);
+        RETURN OLD;
+    END IF;
+
+    RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_audit_orders ON orders;
+
+CREATE TRIGGER trg_audit_orders
+AFTER INSERT OR UPDATE OR DELETE ON orders
+FOR EACH ROW
+EXECUTE FUNCTION audit_orders_func();
+
+
+-- AUDIT_USERS
+
+
+-- Trigger zapisuje zmiany w tabeli users do audit_logs.
+
+CREATE OR REPLACE FUNCTION audit_users_func()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO audit_logs (table_name, record_id, action, changed_by_user_id, old_value, new_value)
+        VALUES ('users', NEW.id, 'INSERT', NULL, NULL, row_to_json(NEW)::TEXT);
+        RETURN NEW;
+
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO audit_logs (table_name, record_id, action, changed_by_user_id, old_value, new_value)
+        VALUES ('users', NEW.id, 'UPDATE', NULL, row_to_json(OLD)::TEXT, row_to_json(NEW)::TEXT);
+        RETURN NEW;
+
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO audit_logs (table_name, record_id, action, changed_by_user_id, old_value, new_value)
+        VALUES ('users', OLD.id, 'DELETE', NULL, row_to_json(OLD)::TEXT, NULL);
+        RETURN OLD;
+    END IF;
+
+    RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_audit_users ON users;
+
+CREATE TRIGGER trg_audit_users
+AFTER INSERT OR UPDATE OR DELETE ON users
+FOR EACH ROW
+EXECUTE FUNCTION audit_users_func();
+
+
+-- =========================================================
 -- TRANSPORTY, TRASY, POJAZDY, PRZYPISANIE PRZEMYTNIKOW
 -- =========================================================
 
