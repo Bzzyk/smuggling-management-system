@@ -5,6 +5,61 @@
 -- =========================================================
 
 -- =========================================================
+-- UZYTKOWNICY, ROLE, ZLECENIA
+-- =========================================================
+
+
+-- COUNT_ORDERS_FOR_USER
+
+
+-- Funkcja zlicza zlecenia utworzone przez uzytkownika albo przypisane do niego.
+
+CREATE OR REPLACE FUNCTION count_orders_for_user(
+    p_user_id INT
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_count INT;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM orders
+    WHERE created_by_user_id = p_user_id
+       OR responsible_user_id = p_user_id;
+
+    RETURN v_count;
+END;
+$$;
+
+
+-- CHECK_USER_ROLE
+
+
+-- Funkcja sprawdza, czy uzytkownik ma podana role.
+
+CREATE OR REPLACE FUNCTION check_user_role(
+    p_user_id INT,
+    p_role_name VARCHAR
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1
+        FROM user_roles ur
+        JOIN roles r
+            ON r.id = ur.role_id
+        WHERE ur.user_id = p_user_id
+          AND r.name = p_role_name
+    );
+END;
+$$;
+
+
+-- =========================================================
 -- TRANSPORTY, TRASY, POJAZDY, PRZYPISANIE PRZEMYTNIKOW
 -- =========================================================
 

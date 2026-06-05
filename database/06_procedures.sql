@@ -5,6 +5,132 @@
 -- =========================================================
 
 -- =========================================================
+-- UZYTKOWNICY, ROLE, ZLECENIA
+-- =========================================================
+
+
+-- CREATE_ORDER
+
+
+-- Procedura tworzy zlecenie z domyslnym statusem NOWE.
+
+CREATE OR REPLACE PROCEDURE create_order(
+    p_title VARCHAR,
+    p_description TEXT,
+    p_planned_date DATE,
+    p_created_by_user_id INT,
+    p_responsible_user_id INT DEFAULT NULL,
+    p_estimated_profit NUMERIC DEFAULT 0
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_status_id INT;
+BEGIN
+    SELECT id
+    INTO v_status_id
+    FROM order_statuses
+    WHERE name = 'NOWE';
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Status zlecenia NOWE nie istnieje';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM users
+        WHERE id = p_created_by_user_id
+    ) THEN
+        RAISE EXCEPTION 'Uzytkownik tworzacy o id % nie istnieje', p_created_by_user_id;
+    END IF;
+
+    IF p_responsible_user_id IS NOT NULL
+       AND NOT EXISTS (
+           SELECT 1
+           FROM users
+           WHERE id = p_responsible_user_id
+       ) THEN
+        RAISE EXCEPTION 'Uzytkownik odpowiedzialny o id % nie istnieje', p_responsible_user_id;
+    END IF;
+
+    INSERT INTO orders (
+        title,
+        description,
+        planned_date,
+        status_id,
+        created_by_user_id,
+        responsible_user_id,
+        estimated_profit
+    )
+    VALUES (
+        p_title,
+        p_description,
+        p_planned_date,
+        v_status_id,
+        p_created_by_user_id,
+        p_responsible_user_id,
+        COALESCE(p_estimated_profit, 0)
+    );
+END;
+$$;
+
+
+-- CHANGE_ORDER_STATUS
+
+
+-- Procedura zmienia status zlecenia na podstawie nazwy statusu.
+
+CREATE OR REPLACE PROCEDURE change_order_status(
+    p_order_id INT,
+    p_status_name VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_status_id INT;
+    v_current_status VARCHAR(30);
+BEGIN
+    SELECT os.name
+    INTO v_current_status
+    FROM orders o
+    JOIN order_statuses os
+        ON os.id = o.status_id
+    WHERE o.id = p_order_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Zlecenie o id % nie istnieje', p_order_id;
+    END IF;
+
+    SELECT id
+    INTO v_status_id
+    FROM order_statuses
+    WHERE name = p_status_name;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Status zlecenia % nie istnieje', p_status_name;
+    END IF;
+
+    IF p_status_name NOT IN ('NOWE', 'W_TRAKCIE', 'ZREALIZOWANE', 'ANULOWANE') THEN
+        RAISE EXCEPTION 'Nieprawidlowy status zlecenia: %', p_status_name;
+    END IF;
+
+    IF v_current_status = p_status_name THEN
+        RETURN;
+    END IF;
+
+    UPDATE orders
+    SET status_id = v_status_id,
+        completed_at = CASE
+            WHEN p_status_name IN ('ZREALIZOWANE', 'ANULOWANE') THEN CURRENT_TIMESTAMP
+            WHEN p_status_name IN ('NOWE', 'W_TRAKCIE') THEN NULL
+            ELSE completed_at
+        END
+    WHERE id = p_order_id;
+END;
+$$;
+
+
+-- =========================================================
 -- TRANSPORTY, TRASY, POJAZDY, PRZYPISANIE PRZEMYTNIKOW
 -- =========================================================
 
