@@ -25,7 +25,7 @@ public class WarehouseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'ACCOUNTANT')")
     @GetMapping
     public String listWarehouses(Model model) {
-        model.addAttribute("warehouses", warehouseService.findAll());
+        model.addAttribute("warehouseViews", warehouseService.findAllWithCapacityUsage());
         return "warehouses/list";
     }
 
@@ -52,7 +52,7 @@ public class WarehouseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'ACCOUNTANT')")
     @GetMapping("/{id}")
     public String showWarehouseDetails(@PathVariable Integer id, Model model) {
-        model.addAttribute("warehouse", warehouseService.getWarehouseById(id));
+        model.addAttribute("warehouseView", warehouseService.getWarehouseCapacityView(id));
         return "warehouses/details";
     }
 

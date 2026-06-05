@@ -13,7 +13,7 @@
             <h2 class="mb-0">Szczegóły magazynu</h2>
         </div>
         <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-            <a th:href="@{/warehouses/{id}/edit(id=${warehouse.id})}" class="btn btn-primary">
+            <a th:href="@{/warehouses/{id}/edit(id=${warehouseView.warehouse.id})}" class="btn btn-primary">
                 <i class="bi bi-pencil"></i> Edytuj
             </a>
         </div>
@@ -29,23 +29,40 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <h3 class="card-title fw-bold" th:text="${warehouse.name}">Magazyn</h3>
-                    <p class="text-muted mb-0" th:text="${warehouse.location}">Lokalizacja</p>
+                    <h3 class="card-title fw-bold" th:text="${warehouseView.warehouse.name}">Magazyn</h3>
+                    <p class="text-muted mb-0" th:text="${warehouseView.warehouse.location}">Lokalizacja</p>
                 </div>
                 <div>
-                    <span th:if="${warehouse.active}" class="badge bg-success fs-6">Aktywny</span>
-                    <span th:unless="${warehouse.active}" class="badge bg-danger fs-6">Nieaktywny</span>
+                    <span th:if="${warehouseView.warehouse.active}" class="badge bg-success fs-6">Aktywny</span>
+                    <span th:unless="${warehouseView.warehouse.active}" class="badge bg-danger fs-6">Nieaktywny</span>
                 </div>
             </div>
             <hr>
             <div class="row text-muted">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <i class="bi bi-boxes me-1"></i> Maksymalna pojemność:
-                    <strong th:text="${warehouse.maxCapacity}">0</strong>
+                    <strong th:text="${warehouseView.warehouse.maxCapacity}">0</strong>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
+                    <i class="bi bi-box-fill me-1"></i> Zajęte:
+                    <strong th:text="${warehouseView.usedCapacity}">0</strong>
+                </div>
+                <div class="col-md-3">
+                    <i class="bi bi-box me-1"></i> Wolne:
+                    <strong th:classappend="${warehouseView.freeCapacity < 0 ? 'text-danger' : ''}"
+                            th:text="${warehouseView.freeCapacity}">0</strong>
+                </div>
+                <div class="col-md-3">
+                    <i class="bi bi-speedometer2 me-1"></i> Wypełnienie:
+                    <strong th:classappend="${warehouseView.usagePercentage > 100 ? 'text-danger' : (warehouseView.usagePercentage >= 80 ? 'text-warning' : 'text-success')}"
+                            th:text="${warehouseView.usagePercentage + '%'}">0%</strong>
+                </div>
+            </div>
+            <hr>
+            <div class="row text-muted">
+                <div class="col-md-12">
                     <i class="bi bi-clock-history me-1"></i> Utworzono:
-                    <strong th:text="${warehouse.createdAt}">Data</strong>
+                    <strong th:text="${warehouseView.warehouse.createdAt}">Data</strong>
                 </div>
             </div>
         </div>
