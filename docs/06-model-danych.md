@@ -129,6 +129,8 @@ ograniczenia `CHECK` oraz indeksy. Przykladowo:
 - statusy i typy slownikowe sa ograniczone przez `CHECK`,
 - wartosci liczbowe, takie jak pojemnosc pojazdu, pojemnosc magazynu,
   liczba paczek i kwoty platnosci, musza byc dodatnie,
+- `orders.estimated_profit` moze byc dodatni albo ujemny, poniewaz jest
+  przewidywanym zyskiem netto wyliczanym automatycznie z transportow,
 - daty transportu sa sprawdzane tak, aby planowana data przyjazdu nie byla
   wczesniejsza od daty transportu.
 - przypisanie pojazdu, ladunku i przemytnika do transportu jest dodatkowo
@@ -174,10 +176,13 @@ zaktualizowane ryzyko oraz koszt operacyjny.
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `calculate_transport_risk_score(p_transport_id)`      | Oblicza punktowy poziom ryzyka transportu w skali 0-100. Uwzglednia trudnosc trasy, dystans, typ pojazdu, liczbe paczek, wartosc ladunku oraz doswiadczenie i skutecznosc przypisanych przemytnikow. |
 | `estimate_transport_operational_cost(p_transport_id)` | Oblicza szacunkowy koszt operacyjny transportu. Uwzglednia dystans, typ pojazdu, ryzyko trasy, liczbe paczek, wartosc ladunku oraz doswiadczenie przypisanych przemytnikow. |
+| `calculate_transport_estimated_profit(p_transport_id)` | Oblicza przewidywany zysk transportu jako wartosc przypisanego ladunku pomniejszona o szacunkowy koszt operacyjny transportu. |
+| `refresh_order_estimated_profit(p_order_id)`          | Przelicza `orders.estimated_profit` jako sume przewidywanych zyskow wszystkich nieanulowanych transportow danego zlecenia. |
 
-Przewidywany zysk widoczny w panelu transportu jest wyliczany po stronie
-aplikacji jako suma wartosci przypisanych ladunkow pomniejszona o koszt
-operacyjny zwrocony przez funkcje `estimate_transport_operational_cost`.
+Przewidywany zysk widoczny w panelu transportu jest wyliczany przez funkcje
+`calculate_transport_estimated_profit`. Aplikacja odczytuje wynik z bazy
+danych, dzieki czemu panel transportu i automatycznie aktualizowane pole
+`orders.estimated_profit` korzystaja z tej samej definicji zysku.
 
 ## Procedury modulu transportowego
 
@@ -203,6 +208,12 @@ zostanie wykonana przez procedure, aplikacje czy reczny SQL.
 | `trg_validate_transport_status_change`                   | `transports`            | Pilnuje dozwolonych przejsc statusow transportu oraz wymaga pojazdu, ladunku i przemytnika przy rozpoczeciu transportu. Sprawdza tez, czy ladunek miesci sie w pojezdzie. |
 | `trg_validate_smuggler_assignment`                       | `smuggler_assignments`  | Blokuje aktywne przypisanie przemytnika do transportu innego niz `ZAPLANOWANY` oraz blokuje zajetego lub nieaktywnego przemytnika. |
 | `trg_close_transport_assignments_and_update_stats`       | `transports`            | Po zmianie statusu na `DOSTARCZONY`, `NIEUDANY` albo `ANULOWANY` dezaktywuje przypisania, a dla sukcesu lub porazki aktualizuje statystyki przemytnikow. |
+| `trg_refresh_order_profit_transports`                    | `transports`            | Po dodaniu, edycji lub usunieciu transportu przelicza przewidywany zysk powiazanego zlecenia. |
+| `trg_refresh_order_profit_cargo`                         | `cargo`                 | Po zmianie ladunku, jego wartosci, liczby paczek lub przypisania do transportu odswieza przewidywany zysk zlecenia. |
+| `trg_refresh_order_profit_smuggler_assignments`          | `smuggler_assignments`  | Po zmianie skladu ekipy transportu odswieza przewidywany zysk zlecenia, poniewaz doswiadczenie przemytnikow wplywa na koszt operacyjny. |
+| `trg_refresh_order_profit_routes`                        | `routes`                | Po zmianie dystansu albo poziomu trudnosci trasy odswieza zysk zlecen powiazanych z transportami na tej trasie. |
+| `trg_refresh_order_profit_vehicles`                      | `vehicles`              | Po zmianie typu pojazdu odswieza zysk zlecen powiazanych z transportami uzywajacymi tego pojazdu. |
+| `trg_refresh_order_profit_route_difficulty_levels`       | `route_difficulty_levels` | Po zmianie poziomu ryzyka odswieza zysk zlecen korzystajacych z tras o tym poziomie trudnosci. |
 
 ## Widoki magazynowo-finansowe
 

@@ -1,6 +1,10 @@
 package pl.edu.pb.smuggling.transport.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.edu.pb.smuggling.transport.dto.VehicleFormDto;
@@ -21,12 +25,26 @@ public class VehicleService {
     private final AuditLogService auditLogService;
 
     public List<Vehicle> getAllVehicles() {
-        return vehicleRepository.findAll();
+        return vehicleRepository.findByActiveTrue();
+    }
+
+    public Page<Vehicle> getVehiclesPage(int page, int size, String sort, String dir) {
+        Pageable pageable = PageRequest.of(
+                Math.max(page, 0),
+                size,
+                Sort.by(getDirection(dir), getVehicleSortProperty(sort))
+        );
+        return vehicleRepository.findByActiveTrue(pageable);
     }
 
     public Vehicle getVehicleById(Integer id) {
         return vehicleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono pojazdu o ID: " + id));
+    }
+
+    public Vehicle getVehicleByRegistrationNumber(String registrationNumber) {
+        return vehicleRepository.findByRegistrationNumber(registrationNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono pojazdu o rejestracji: " + registrationNumber));
     }
 
     @Transactional
@@ -67,6 +85,16 @@ public class VehicleService {
         auditLogService.logAction("vehicles", vehicle.getId(), "DELETE", oldState, null);
     }
 
+    @Transactional
+    public void deactivateVehicle(Integer id) {
+        Vehicle vehicle = getVehicleById(id);
+        Map<String, Object> oldState = vehicleToMap(vehicle);
+        vehicle.setActive(false);
+        vehicle.setAvailable(false);
+        vehicleRepository.save(vehicle);
+        auditLogService.logAction("vehicles", vehicle.getId(), "DEACTIVATE", oldState, vehicleToMap(vehicle));
+    }
+
     private void updateVehicleFromDto(Vehicle vehicle, VehicleFormDto dto) {
         vehicle.setRegistrationNumber(dto.getRegistrationNumber());
         vehicle.setBrand(dto.getBrand());
@@ -85,6 +113,18 @@ public class VehicleService {
         map.put("vehicleType", vehicle.getVehicleType());
         map.put("loadCapacity", vehicle.getLoadCapacity());
         map.put("available", vehicle.getAvailable());
+        map.put("active", vehicle.getActive());
         return map;
+    }
+
+    private Sort.Direction getDirection(String dir) {
+        return "asc".equalsIgnoreCase(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+    }
+
+    private String getVehicleSortProperty(String sort) {
+        return switch (sort) {
+            case "registrationNumber", "brand", "model", "loadCapacity" -> sort;
+            default -> "registrationNumber";
+        };
     }
 }

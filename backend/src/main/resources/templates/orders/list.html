@@ -64,6 +64,9 @@
                                 <span th:if="${order.estimatedProfit != null and order.estimatedProfit > 0}" class="text-success fw-bold">
                                     $<span th:text="${order.estimatedProfit}">0.00</span>
                                 </span>
+                                <span th:if="${order.estimatedProfit != null and order.estimatedProfit < 0}" class="text-danger fw-bold">
+                                    $<span th:text="${order.estimatedProfit}">-100.00</span>
+                                </span>
                                 <span th:if="${order.estimatedProfit == null or order.estimatedProfit == 0}" class="text-muted fst-italic">-</span>
                             </td>
                             <td class="text-end">

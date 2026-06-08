@@ -42,4 +42,7 @@ public class Route {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(nullable = false)
+    private Boolean active = true;
 }

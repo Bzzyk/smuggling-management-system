@@ -3,7 +3,6 @@ package pl.edu.pb.smuggling.transport.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import pl.edu.pb.smuggling.cargo.model.Cargo;
 import pl.edu.pb.smuggling.cargo.repository.CargoRepository;
 import pl.edu.pb.smuggling.transport.model.Transport;
 
@@ -39,11 +38,20 @@ public class TransportEstimateService {
                 BigDecimal.class,
                 transportId
         );
-        BigDecimal cargoValue = cargoRepository.findByTransportId(transportId).stream()
-                .map(Cargo::getEstimatedValue)
-                .filter(value -> value != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal predictedProfit = cargoValue.subtract(operationalCost != null ? operationalCost : BigDecimal.ZERO);
+        BigDecimal cargoValue = jdbcTemplate.queryForObject(
+                """
+                SELECT COALESCE(SUM(estimated_value), 0)
+                FROM cargo
+                WHERE transport_id = ?
+                """,
+                BigDecimal.class,
+                transportId
+        );
+        BigDecimal predictedProfit = jdbcTemplate.queryForObject(
+                "SELECT calculate_transport_estimated_profit(?)",
+                BigDecimal.class,
+                transportId
+        );
 
         return new TransportEstimate(riskScore, operationalCost, cargoValue, predictedProfit);
     }

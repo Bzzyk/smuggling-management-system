@@ -2,6 +2,7 @@ package pl.edu.pb.smuggling.transport.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.edu.pb.smuggling.transport.dto.RouteFormDto;
 import pl.edu.pb.smuggling.transport.model.Route;
@@ -25,8 +27,16 @@ public class RouteController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")
     @GetMapping
-    public String listRoutes(Model model) {
-        model.addAttribute("routes", routeService.getAllRoutes());
+    public String listRoutes(@RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "name") String sort,
+                             @RequestParam(defaultValue = "asc") String dir,
+                             Model model) {
+        Page<Route> routePage = routeService.getRoutesPage(page, 10, sort, dir);
+        model.addAttribute("routePage", routePage);
+        model.addAttribute("routes", routePage.getContent());
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+        model.addAttribute("reverseDir", "asc".equalsIgnoreCase(dir) ? "desc" : "asc");
         return "routes/list";
     }
 
@@ -97,5 +107,13 @@ public class RouteController {
             model.addAttribute("difficultyLevels", routeService.getAllDifficultyLevels());
             return "routes/form";
         }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'BOSS')")
+    @PostMapping("/{id}/deactivate")
+    public String deactivateRoute(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        routeService.deactivateRoute(id);
+        redirectAttributes.addFlashAttribute("successMessage", "Trasa zostala dezaktywowana.");
+        return "redirect:/routes";
     }
 }

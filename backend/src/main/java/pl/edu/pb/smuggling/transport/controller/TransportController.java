@@ -43,8 +43,30 @@ public class TransportController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")
     @GetMapping
-    public String listTransports(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        model.addAttribute("transports", transportService.getVisibleTransports(userDetails.getUsername()));
+    public String listTransports(@AuthenticationPrincipal UserDetails userDetails,
+                                 @RequestParam(defaultValue = "0") int page,
+                                 @RequestParam(defaultValue = "transportDate") String sort,
+                                 @RequestParam(defaultValue = "desc") String dir,
+                                 @RequestParam(required = false) String status,
+                                 @RequestParam(defaultValue = "ALL") String dateFilter,
+                                 Model model) {
+        Page<Transport> transportPage = transportService.getVisibleTransports(
+                userDetails.getUsername(),
+                safePage(page),
+                10,
+                sort,
+                dir,
+                status,
+                dateFilter
+        );
+        model.addAttribute("transportPage", transportPage);
+        model.addAttribute("transports", transportPage.getContent());
+        model.addAttribute("statuses", transportService.getAllStatuses());
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+        model.addAttribute("reverseDir", "asc".equalsIgnoreCase(dir) ? "desc" : "asc");
+        model.addAttribute("status", status);
+        model.addAttribute("dateFilter", dateFilter);
         return "transports/list";
     }
 

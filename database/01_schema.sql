@@ -146,10 +146,7 @@ CREATE TABLE IF NOT EXISTS orders (
         REFERENCES users(id),
 
     CONSTRAINT chk_orders_title_length
-        CHECK (LENGTH(title) BETWEEN 3 AND 100),
-
-    CONSTRAINT chk_orders_estimated_profit
-        CHECK (estimated_profit >= 0)
+        CHECK (LENGTH(title) BETWEEN 3 AND 100)
 );
 
 
@@ -252,6 +249,7 @@ CREATE TABLE IF NOT EXISTS routes (
     difficulty_level_id INT NOT NULL,
 
     description TEXT,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT fk_routes_difficulty_level
         FOREIGN KEY (difficulty_level_id)
@@ -278,6 +276,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
 
     load_capacity INT NOT NULL,
     available BOOLEAN NOT NULL DEFAULT TRUE,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT chk_vehicle_type
         CHECK (vehicle_type IN ('SAMOCHOD_OSOBOWY', 'BUS', 'CIEZAROWKA', 'VAN')),

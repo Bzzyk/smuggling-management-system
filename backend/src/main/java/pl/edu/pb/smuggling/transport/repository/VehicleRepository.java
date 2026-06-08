@@ -7,17 +7,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import pl.edu.pb.smuggling.transport.model.Vehicle;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
     Optional<Vehicle> findByRegistrationNumber(String registrationNumber);
     boolean existsByRegistrationNumber(String registrationNumber);
+    List<Vehicle> findByActiveTrue();
+    Page<Vehicle> findByActiveTrue(Pageable pageable);
 
     @Query("""
             select v
             from Vehicle v
-            where v.available = true
+            where v.active = true
+              and v.available = true
               and v.loadCapacity >= :requiredCapacity
             order by v.loadCapacity asc, v.registrationNumber asc
             """)

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Zarządzanie Trasami</title>
+    <title>Zarzadzanie Trasami</title>
 </head>
 <body>
 <div layout:fragment="content" class="container mt-4">
@@ -10,11 +10,10 @@
             <h2>Katalog Tras</h2>
         </div>
         <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-            <a th:href="@{/routes/create}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Zdefiniuj nową trasę</a>
+            <a th:href="@{/routes/create}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Zdefiniuj nowa trase</a>
         </div>
     </div>
 
-    <!-- Alerty -->
     <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle me-1"></i>
         <span th:text="${successMessage}">Sukces</span>
@@ -26,43 +25,66 @@
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
-                        <tr>
-                            <th scope="col">Nazwa Trasy</th>
-                            <th scope="col">Z -> Do</th>
-                            <th scope="col">Dystans (km)</th>
-                            <th scope="col">Poziom Trudności</th>
-                            <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>
-                        </tr>
+                    <tr>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/routes(sort='name', dir=${sort == 'name' ? reverseDir : 'asc'})}">Nazwa Trasy</a>
+                        </th>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/routes(sort='startPoint', dir=${sort == 'startPoint' ? reverseDir : 'asc'})}">Z -> Do</a>
+                        </th>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/routes(sort='distanceKm', dir=${sort == 'distanceKm' ? reverseDir : 'asc'})}">Dystans (km)</a>
+                        </th>
+                        <th scope="col">Poziom Trudnosci</th>
+                        <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="route : ${routes}">
-                            <td class="fw-bold" th:text="${route.name}">Szlak Północny</td>
-                            <td>
-                                <span class="badge bg-secondary" th:text="${route.startPoint}">A</span>
-                                <i class="bi bi-arrow-right mx-1 text-muted"></i>
-                                <span class="badge bg-secondary" th:text="${route.endPoint}">B</span>
-                            </td>
-                            <td th:text="${route.distanceKm != null ? route.distanceKm + ' km' : 'Nieznany'}">120.5 km</td>
-                            <td>
-                                <span class="badge" th:classappend="${route.difficultyLevel.riskLevel > 3 ? 'bg-danger' : (route.difficultyLevel.riskLevel > 2 ? 'bg-warning text-dark' : 'bg-info text-dark')}"
-                                      th:text="${route.difficultyLevel.name + ' (Ryzyko: ' + route.difficultyLevel.riskLevel + ')'}">
-                                    Standardowa (Ryzyko: 2)
-                                </span>
-                            </td>
-                            <td class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-                                <a th:href="@{/routes/{id}/edit(id=${route.id})}" class="btn btn-sm btn-outline-primary" title="Edytuj">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(routes)}">
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                <i class="bi bi-info-circle"></i> Brak zdefiniowanych tras. Skonfiguruj nową mapę drogową.
-                            </td>
-                        </tr>
+                    <tr th:each="route : ${routes}">
+                        <td class="fw-bold" th:text="${route.name}">Szlak Polnocny</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${route.startPoint}">A</span>
+                            <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                            <span class="badge bg-secondary" th:text="${route.endPoint}">B</span>
+                        </td>
+                        <td th:text="${route.distanceKm != null ? route.distanceKm + ' km' : 'Nieznany'}">120.5 km</td>
+                        <td>
+                            <span class="badge" th:classappend="${route.difficultyLevel.riskLevel > 3 ? 'bg-danger' : (route.difficultyLevel.riskLevel > 2 ? 'bg-warning text-dark' : 'bg-info text-dark')}"
+                                  th:text="${route.difficultyLevel.name + ' (Ryzyko: ' + route.difficultyLevel.riskLevel + ')'}">
+                                Standardowa (Ryzyko: 2)
+                            </span>
+                        </td>
+                        <td class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+                            <a th:href="@{/routes/{id}/edit(id=${route.id})}" class="btn btn-sm btn-outline-primary" title="Edytuj">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{/routes/{id}/deactivate(id=${route.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Usun">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(routes)}">
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle"></i> Brak zdefiniowanych tras.
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${routePage.totalPages > 1}">
+            <a class="btn btn-sm btn-outline-secondary"
+               th:classappend="${routePage.first} ? 'disabled'"
+               th:href="@{/routes(page=${routePage.number - 1}, sort=${sort}, dir=${dir})}">Poprzednia</a>
+            <span>Strona <strong th:text="${routePage.number + 1}">1</strong> z <strong th:text="${routePage.totalPages}">1</strong></span>
+            <a class="btn btn-sm btn-outline-secondary"
+               th:classappend="${routePage.last} ? 'disabled'"
+               th:href="@{/routes(page=${routePage.number + 1}, sort=${sort}, dir=${dir})}">Nastepna</a>
         </div>
     </div>
 </div>

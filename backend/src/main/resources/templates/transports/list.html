@@ -21,16 +21,65 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
+    <form method="get" th:action="@{/transports}" class="row g-2 align-items-end mb-3">
+        <div class="col-md-3">
+            <label for="status" class="form-label">Status</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">Wszystkie</option>
+                <option th:each="transportStatus : ${statuses}"
+                        th:value="${transportStatus.name}"
+                        th:text="${transportStatus.name}"
+                        th:selected="${transportStatus.name == status}">ZAPLANOWANY</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="dateFilter" class="form-label">Data</label>
+            <select id="dateFilter" name="dateFilter" class="form-select">
+                <option value="ALL" th:selected="${dateFilter == 'ALL'}">Wszystkie</option>
+                <option value="TODAY" th:selected="${dateFilter == 'TODAY'}">Dzisiaj</option>
+                <option value="FUTURE" th:selected="${dateFilter == 'FUTURE'}">Od dzisiaj</option>
+                <option value="NEXT_7" th:selected="${dateFilter == 'NEXT_7'}">Nastepne 7 dni</option>
+                <option value="NEXT_30" th:selected="${dateFilter == 'NEXT_30'}">Nastepne 30 dni</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="sort" class="form-label">Sortuj po</label>
+            <select id="sort" name="sort" class="form-select">
+                <option value="transportDate" th:selected="${sort == 'transportDate'}">Dacie</option>
+                <option value="startLocation" th:selected="${sort == 'startLocation'}">Starcie</option>
+                <option value="destination" th:selected="${sort == 'destination'}">Celu</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="dir" class="form-label">Kierunek</label>
+            <select id="dir" name="dir" class="form-select">
+                <option value="desc" th:selected="${dir == 'desc'}">Malejaco</option>
+                <option value="asc" th:selected="${dir == 'asc'}">Rosnaco</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-funnel"></i> Filtruj
+            </button>
+        </div>
+    </form>
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                     <tr>
-                        <th scope="col">Data</th>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/transports(sort='transportDate', dir=${sort == 'transportDate' ? reverseDir : 'desc'}, status=${status}, dateFilter=${dateFilter})}">Data</a>
+                        </th>
                         <th scope="col">Zlecenie</th>
                         <th scope="col">Pojazd</th>
-                        <th scope="col">Trasa</th>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/transports(sort='startLocation', dir=${sort == 'startLocation' ? reverseDir : 'asc'}, status=${status}, dateFilter=${dateFilter})}">Trasa</a>
+                        </th>
                         <th scope="col">Status</th>
                         <th scope="col" class="text-end">Akcje</th>
                     </tr>
@@ -90,6 +139,15 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${transportPage.totalPages > 1}">
+            <a class="btn btn-sm btn-outline-secondary"
+               th:classappend="${transportPage.first} ? 'disabled'"
+               th:href="@{/transports(page=${transportPage.number - 1}, sort=${sort}, dir=${dir}, status=${status}, dateFilter=${dateFilter})}">Poprzednia</a>
+            <span>Strona <strong th:text="${transportPage.number + 1}">1</strong> z <strong th:text="${transportPage.totalPages}">1</strong></span>
+            <a class="btn btn-sm btn-outline-secondary"
+               th:classappend="${transportPage.last} ? 'disabled'"
+               th:href="@{/transports(page=${transportPage.number + 1}, sort=${sort}, dir=${dir}, status=${status}, dateFilter=${dateFilter})}">Nastepna</a>
         </div>
     </div>
 </div>
