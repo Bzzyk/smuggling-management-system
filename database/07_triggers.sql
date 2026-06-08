@@ -346,6 +346,214 @@ AFTER UPDATE OF status_id ON transports
 FOR EACH ROW
 EXECUTE FUNCTION close_transport_assignments_and_update_stats();
 
+
+-- REFRESH_ORDER_ESTIMATED_PROFIT
+
+
+-- Triggery ponizej automatycznie przeliczaja orders.estimated_profit na
+-- podstawie nieanulowanych transportow zlecenia. Odpalaja sie po zmianach
+-- transportu, ladunku, ekipy, trasy, pojazdu lub poziomu trudnosci.
+
+CREATE OR REPLACE FUNCTION refresh_order_profit_after_transport_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        PERFORM refresh_order_estimated_profit(OLD.order_id);
+        RETURN OLD;
+    END IF;
+
+    PERFORM refresh_order_estimated_profit(NEW.order_id);
+
+    IF TG_OP = 'UPDATE' AND OLD.order_id IS DISTINCT FROM NEW.order_id THEN
+        PERFORM refresh_order_estimated_profit(OLD.order_id);
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_refresh_order_profit_transports ON transports;
+
+CREATE TRIGGER trg_refresh_order_profit_transports
+AFTER INSERT OR UPDATE OR DELETE ON transports
+FOR EACH ROW
+EXECUTE FUNCTION refresh_order_profit_after_transport_change();
+
+
+CREATE OR REPLACE FUNCTION refresh_order_profit_after_cargo_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_order_id INT;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        IF OLD.transport_id IS NOT NULL THEN
+            SELECT order_id INTO v_order_id
+            FROM transports
+            WHERE id = OLD.transport_id;
+
+            PERFORM refresh_order_estimated_profit(v_order_id);
+        END IF;
+        RETURN OLD;
+    END IF;
+
+    IF NEW.transport_id IS NOT NULL THEN
+        SELECT order_id INTO v_order_id
+        FROM transports
+        WHERE id = NEW.transport_id;
+
+        PERFORM refresh_order_estimated_profit(v_order_id);
+    END IF;
+
+    IF TG_OP = 'UPDATE'
+       AND OLD.transport_id IS DISTINCT FROM NEW.transport_id
+       AND OLD.transport_id IS NOT NULL THEN
+        SELECT order_id INTO v_order_id
+        FROM transports
+        WHERE id = OLD.transport_id;
+
+        PERFORM refresh_order_estimated_profit(v_order_id);
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_refresh_order_profit_cargo ON cargo;
+
+CREATE TRIGGER trg_refresh_order_profit_cargo
+AFTER INSERT OR UPDATE OR DELETE ON cargo
+FOR EACH ROW
+EXECUTE FUNCTION refresh_order_profit_after_cargo_change();
+
+
+CREATE OR REPLACE FUNCTION refresh_order_profit_after_assignment_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_order_id INT;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        SELECT order_id INTO v_order_id
+        FROM transports
+        WHERE id = OLD.transport_id;
+
+        PERFORM refresh_order_estimated_profit(v_order_id);
+        RETURN OLD;
+    END IF;
+
+    SELECT order_id INTO v_order_id
+    FROM transports
+    WHERE id = NEW.transport_id;
+
+    PERFORM refresh_order_estimated_profit(v_order_id);
+
+    IF TG_OP = 'UPDATE' AND OLD.transport_id IS DISTINCT FROM NEW.transport_id THEN
+        SELECT order_id INTO v_order_id
+        FROM transports
+        WHERE id = OLD.transport_id;
+
+        PERFORM refresh_order_estimated_profit(v_order_id);
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_refresh_order_profit_smuggler_assignments ON smuggler_assignments;
+
+CREATE TRIGGER trg_refresh_order_profit_smuggler_assignments
+AFTER INSERT OR UPDATE OR DELETE ON smuggler_assignments
+FOR EACH ROW
+EXECUTE FUNCTION refresh_order_profit_after_assignment_change();
+
+
+CREATE OR REPLACE FUNCTION refresh_order_profit_after_route_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_order_id INT;
+BEGIN
+    FOR v_order_id IN
+        SELECT DISTINCT order_id
+        FROM transports
+        WHERE route_id = NEW.id
+    LOOP
+        PERFORM refresh_order_estimated_profit(v_order_id);
+    END LOOP;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_refresh_order_profit_routes ON routes;
+
+CREATE TRIGGER trg_refresh_order_profit_routes
+AFTER UPDATE OF distance_km, difficulty_level_id ON routes
+FOR EACH ROW
+EXECUTE FUNCTION refresh_order_profit_after_route_change();
+
+
+CREATE OR REPLACE FUNCTION refresh_order_profit_after_vehicle_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_order_id INT;
+BEGIN
+    FOR v_order_id IN
+        SELECT DISTINCT order_id
+        FROM transports
+        WHERE vehicle_id = NEW.id
+    LOOP
+        PERFORM refresh_order_estimated_profit(v_order_id);
+    END LOOP;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_refresh_order_profit_vehicles ON vehicles;
+
+CREATE TRIGGER trg_refresh_order_profit_vehicles
+AFTER UPDATE OF vehicle_type ON vehicles
+FOR EACH ROW
+EXECUTE FUNCTION refresh_order_profit_after_vehicle_change();
+
+
+CREATE OR REPLACE FUNCTION refresh_order_profit_after_difficulty_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_order_id INT;
+BEGIN
+    FOR v_order_id IN
+        SELECT DISTINCT t.order_id
+        FROM transports t
+        JOIN routes r
+            ON r.id = t.route_id
+        WHERE r.difficulty_level_id = NEW.id
+    LOOP
+        PERFORM refresh_order_estimated_profit(v_order_id);
+    END LOOP;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_refresh_order_profit_route_difficulty_levels ON route_difficulty_levels;
+
+CREATE TRIGGER trg_refresh_order_profit_route_difficulty_levels
+AFTER UPDATE OF risk_level ON route_difficulty_levels
+FOR EACH ROW
+EXECUTE FUNCTION refresh_order_profit_after_difficulty_change();
+
 -- Pojemność magazynu
 CREATE OR REPLACE FUNCTION check_warehouse_capacity_func()
 RETURNS TRIGGER 

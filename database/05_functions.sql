@@ -293,6 +293,61 @@ BEGIN
 END;
 $$;
 
+
+-- CALCULATE_TRANSPORT_ESTIMATED_PROFIT
+
+
+-- Funkcja oblicza przewidywany zysk pojedynczego transportu jako wartosc
+-- przypisanego ladunku pomniejszona o szacunkowy koszt operacyjny.
+
+CREATE OR REPLACE FUNCTION calculate_transport_estimated_profit(
+    p_transport_id INT
+)
+RETURNS NUMERIC(12, 2)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_cargo_value NUMERIC(12, 2);
+    v_operational_cost NUMERIC(12, 2);
+BEGIN
+    SELECT COALESCE(SUM(estimated_value), 0)
+    INTO v_cargo_value
+    FROM cargo
+    WHERE transport_id = p_transport_id;
+
+    v_operational_cost := estimate_transport_operational_cost(p_transport_id);
+
+    RETURN ROUND(v_cargo_value - COALESCE(v_operational_cost, 0), 2);
+END;
+$$;
+
+
+-- REFRESH_ORDER_ESTIMATED_PROFIT
+
+
+-- Funkcja przelicza przewidywany zysk calego zlecenia na podstawie
+-- wszystkich nieanulowanych transportow tego zlecenia.
+
+CREATE OR REPLACE FUNCTION refresh_order_estimated_profit(
+    p_order_id INT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE orders o
+    SET estimated_profit = COALESCE((
+        SELECT SUM(calculate_transport_estimated_profit(t.id))
+        FROM transports t
+        JOIN transport_statuses ts
+            ON ts.id = t.status_id
+        WHERE t.order_id = p_order_id
+          AND ts.name <> 'ANULOWANY'
+    ), 0)
+    WHERE o.id = p_order_id;
+END;
+$$;
+
 -- calculate_cargo_value: Zwraca szacowaną wartość ładunku na podstawie jego ID
 CREATE OR REPLACE FUNCTION calculate_cargo_value(p_cargo_id INT)
 RETURNS NUMERIC(12, 2) 

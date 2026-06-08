@@ -35,6 +35,9 @@
                     <span th:if="${order.estimatedProfit != null and order.estimatedProfit > 0}" class="text-success fw-bold fs-5">
                         Zysk: $<span th:text="${order.estimatedProfit}">0.00</span>
                     </span>
+                    <span th:if="${order.estimatedProfit != null and order.estimatedProfit < 0}" class="text-danger fw-bold fs-5">
+                        Strata: $<span th:text="${order.estimatedProfit}">-100.00</span>
+                    </span>
                 </div>
             </div>
             <hr>

@@ -2,6 +2,7 @@ package pl.edu.pb.smuggling.transport.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.edu.pb.smuggling.transport.dto.VehicleFormDto;
 import pl.edu.pb.smuggling.transport.model.Vehicle;
@@ -26,8 +28,16 @@ public class VehicleController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")
     @GetMapping
-    public String listVehicles(Model model) {
-        model.addAttribute("vehicles", vehicleService.getAllVehicles());
+    public String listVehicles(@RequestParam(defaultValue = "0") int page,
+                               @RequestParam(defaultValue = "registrationNumber") String sort,
+                               @RequestParam(defaultValue = "asc") String dir,
+                               Model model) {
+        Page<Vehicle> vehiclePage = vehicleService.getVehiclesPage(page, 10, sort, dir);
+        model.addAttribute("vehiclePage", vehiclePage);
+        model.addAttribute("vehicles", vehiclePage.getContent());
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+        model.addAttribute("reverseDir", "asc".equalsIgnoreCase(dir) ? "desc" : "asc");
         return "vehicles/list";
     }
 
@@ -98,5 +108,13 @@ public class VehicleController {
             model.addAttribute("vehicleTypes", VehicleType.values());
             return "vehicles/form";
         }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'BOSS')")
+    @PostMapping("/{id}/deactivate")
+    public String deactivateVehicle(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        vehicleService.deactivateVehicle(id);
+        redirectAttributes.addFlashAttribute("successMessage", "Pojazd zostal wycofany z floty.");
+        return "redirect:/vehicles";
     }
 }

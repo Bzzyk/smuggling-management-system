@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html lang="pl" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragments/layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Zarządzanie Flotą</title>
+    <title>Zarzadzanie Flota</title>
 </head>
 <body>
 <div layout:fragment="content" class="container mt-4">
     <div class="row mb-3 align-items-center">
         <div class="col">
-            <h2>Flota Pojazdów</h2>
+            <h2>Flota Pojazdow</h2>
         </div>
         <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
             <a th:href="@{/vehicles/create}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Dodaj pojazd</a>
         </div>
     </div>
 
-    <!-- Alerty -->
     <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle me-1"></i>
         <span th:text="${successMessage}">Sukces</span>
@@ -26,43 +25,66 @@
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
-                        <tr>
-                            <th scope="col">Rejestracja</th>
-                            <th scope="col">Marka i Model</th>
-                            <th scope="col">Typ</th>
-                            <th scope="col">Ładowność (kg)</th>
-                            <th scope="col">Status</th>
-                            <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>
-                        </tr>
+                    <tr>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/vehicles(sort='registrationNumber', dir=${sort == 'registrationNumber' ? reverseDir : 'asc'})}">Rejestracja</a>
+                        </th>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/vehicles(sort='brand', dir=${sort == 'brand' ? reverseDir : 'asc'})}">Marka i Model</a>
+                        </th>
+                        <th scope="col">Typ</th>
+                        <th scope="col">
+                            <a class="text-decoration-none text-dark"
+                               th:href="@{/vehicles(sort='loadCapacity', dir=${sort == 'loadCapacity' ? reverseDir : 'asc'})}">Ladownosc (kg)</a>
+                        </th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="vehicle : ${vehicles}">
-                            <td class="fw-bold" style="font-family: monospace; font-size: 1.1em;" th:text="${vehicle.registrationNumber}">WX12345</td>
-                            <td th:text="${vehicle.brand + ' ' + vehicle.model}">Ford Transit</td>
-                            <td>
-                                <span class="badge bg-secondary" th:text="${vehicle.vehicleType.displayName}">VAN</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-dark" th:text="${vehicle.loadCapacity}">1500</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success" th:if="${vehicle.available}">Dostępny</span>
-                                <span class="badge bg-warning text-dark" th:unless="${vehicle.available}">W trasie / Zablokowany</span>
-                            </td>
-                            <td class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
-                                <a th:href="@{/vehicles/{id}/edit(id=${vehicle.id})}" class="btn btn-sm btn-outline-primary" title="Edytuj">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(vehicles)}">
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                <i class="bi bi-info-circle"></i> Brak pojazdów we flocie. Dodaj nowy pojazd.
-                            </td>
-                        </tr>
+                    <tr th:each="vehicle : ${vehicles}">
+                        <td class="fw-bold" style="font-family: monospace; font-size: 1.1em;" th:text="${vehicle.registrationNumber}">WX12345</td>
+                        <td th:text="${vehicle.brand + ' ' + vehicle.model}">Ford Transit</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${vehicle.vehicleType.displayName}">VAN</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-dark" th:text="${vehicle.loadCapacity}">1500</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success" th:if="${vehicle.available}">Dostepny</span>
+                            <span class="badge bg-warning text-dark" th:unless="${vehicle.available}">W trasie / Zablokowany</span>
+                        </td>
+                        <td class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+                            <a th:href="@{/vehicles/{id}/edit(id=${vehicle.id})}" class="btn btn-sm btn-outline-primary" title="Edytuj">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{/vehicles/{id}/deactivate(id=${vehicle.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Usun">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(vehicles)}">
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle"></i> Brak pojazdow we flocie.
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${vehiclePage.totalPages > 1}">
+            <a class="btn btn-sm btn-outline-secondary"
+               th:classappend="${vehiclePage.first} ? 'disabled'"
+               th:href="@{/vehicles(page=${vehiclePage.number - 1}, sort=${sort}, dir=${dir})}">Poprzednia</a>
+            <span>Strona <strong th:text="${vehiclePage.number + 1}">1</strong> z <strong th:text="${vehiclePage.totalPages}">1</strong></span>
+            <a class="btn btn-sm btn-outline-secondary"
+               th:classappend="${vehiclePage.last} ? 'disabled'"
+               th:href="@{/vehicles(page=${vehiclePage.number + 1}, sort=${sort}, dir=${dir})}">Nastepna</a>
         </div>
     </div>
 </div>

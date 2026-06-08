@@ -39,4 +39,7 @@ public class Vehicle {
 
     @Column(nullable = false)
     private Boolean available = true;
+
+    @Column(nullable = false)
+    private Boolean active = true;
 }

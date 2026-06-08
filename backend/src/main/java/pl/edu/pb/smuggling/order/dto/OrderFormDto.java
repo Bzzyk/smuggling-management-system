@@ -1,6 +1,5 @@
 package pl.edu.pb.smuggling.order.dto;
 
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -30,7 +29,6 @@ public class OrderFormDto {
 
     private Integer responsibleUserId;
 
-    @DecimalMin(value = "0.00", message = "Szacowany zysk nie moze byc ujemny")
     @NumberFormat(pattern = "#.##")
     private BigDecimal estimatedProfit;
 }

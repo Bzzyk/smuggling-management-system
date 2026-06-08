@@ -1,6 +1,10 @@
 package pl.edu.pb.smuggling.transport.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,7 @@ import pl.edu.pb.smuggling.transport.repository.TransportStatusRepository;
 import pl.edu.pb.smuggling.user.model.User;
 import pl.edu.pb.smuggling.user.repository.UserRepository;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,13 +63,39 @@ public class TransportService {
         return List.of();
     }
 
+    public Page<Transport> getVisibleTransports(String username, int page, int size, String sort, String dir, String statusName, String dateFilter) {
+        User user = getUserByUsername(username);
+        Pageable pageable = PageRequest.of(
+                Math.max(page, 0),
+                size,
+                Sort.by(getDirection(dir), getTransportSortProperty(sort))
+        );
+        DateRange dateRange = getDateRange(dateFilter);
+        String normalizedStatus = normalizeFilter(statusName);
+
+        return transportRepository.findVisibleTransports(
+                user.getId(),
+                hasRole(user, ROLE_ADMIN),
+                hasRole(user, ROLE_BOSS),
+                hasRole(user, ROLE_SMUGGLER),
+                normalizedStatus,
+                dateRange.from(),
+                dateRange.to(),
+                pageable
+        );
+    }
+
     public SmugglingOrder getOrderById(Integer id) {
         return smugglingOrderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono zlecenia o ID: " + id));
     }
 
     public List<Route> getAllRoutes() {
-        return routeRepository.findAll();
+        return routeRepository.findByActiveTrue();
+    }
+
+    public List<TransportStatus> getAllStatuses() {
+        return transportStatusRepository.findAll();
     }
 
     public Transport getTransportById(Integer id) {
@@ -214,5 +245,34 @@ public class TransportService {
     private boolean hasRole(User user, String roleName) {
         return user.getRoles().stream()
                 .anyMatch(role -> roleName.equals(role.getName()));
+    }
+
+    private Sort.Direction getDirection(String dir) {
+        return "asc".equalsIgnoreCase(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+    }
+
+    private String getTransportSortProperty(String sort) {
+        return switch (sort) {
+            case "transportDate", "startLocation", "destination" -> sort;
+            default -> "transportDate";
+        };
+    }
+
+    private String normalizeFilter(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private DateRange getDateRange(String dateFilter) {
+        LocalDate today = LocalDate.now();
+        return switch (dateFilter == null ? "ALL" : dateFilter) {
+            case "TODAY" -> new DateRange(today, today);
+            case "NEXT_7" -> new DateRange(today, today.plusDays(7));
+            case "NEXT_30" -> new DateRange(today, today.plusDays(30));
+            case "FUTURE" -> new DateRange(today, null);
+            default -> new DateRange(null, null);
+        };
+    }
+
+    private record DateRange(LocalDate from, LocalDate to) {
     }
 }

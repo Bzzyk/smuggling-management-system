@@ -1,4 +1,4 @@
-package pl.edu.pb.smuggling.transport.dto;
+package pl.edu.pb.smuggling.transport.dto.rest;
 
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +15,7 @@ public class VehicleDto {
     private VehicleType vehicleType;
     private Integer loadCapacity;
     private Boolean available;
+    private Boolean active;
 
     public static VehicleDto fromEntity(Vehicle vehicle) {
         return VehicleDto.builder()
@@ -25,6 +26,7 @@ public class VehicleDto {
                 .vehicleType(vehicle.getVehicleType())
                 .loadCapacity(vehicle.getLoadCapacity())
                 .available(vehicle.getAvailable())
+                .active(vehicle.getActive())
                 .build();
     }
 }
