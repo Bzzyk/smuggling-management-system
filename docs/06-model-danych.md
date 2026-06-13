@@ -4,6 +4,10 @@ Dokument opisuje relacyjny model danych systemu. Baza danych zostala
 podzielona na trzy glowne obszary: uzytkownicy i zlecenia, transporty oraz
 ladunki, magazyny i platnosci.
 
+## Diagram ERD
+
+![Diagram ERD systemu](diagram.svg)
+
 ## Lista encji
 
 | Tabela                    | Opis                                                            |

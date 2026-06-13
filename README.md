@@ -117,6 +117,16 @@ Opis zakresu systemu, ról użytkowników, głównych encji, operacji biznesowyc
 
 `docs/05-analiza-biznesowa.md`
 
+## Model danych
+
+Opis modelu danych oraz diagram ERD znajduja sie w pliku:
+
+`docs/06-model-danych.md`
+
+Bezposredni plik diagramu:
+
+`docs/diagram.svg`
+
 ## Autorzy
 
 - Kamil Osakowicz

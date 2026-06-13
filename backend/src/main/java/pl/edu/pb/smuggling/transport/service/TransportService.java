@@ -78,8 +78,11 @@ public class TransportService {
                 hasRole(user, ROLE_ADMIN),
                 hasRole(user, ROLE_BOSS),
                 hasRole(user, ROLE_SMUGGLER),
+                normalizedStatus != null,
                 normalizedStatus,
+                dateRange.from() != null,
                 dateRange.from(),
+                dateRange.to() != null,
                 dateRange.to(),
                 pageable
         );

@@ -242,12 +242,13 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     v_transport_status VARCHAR(30);
+    v_current_vehicle_id INT;
     v_vehicle_available BOOLEAN;
     v_vehicle_capacity INT;
     v_current_packages INT;
 BEGIN
-    SELECT ts.name
-    INTO v_transport_status
+    SELECT ts.name, t.vehicle_id
+    INTO v_transport_status, v_current_vehicle_id
     FROM transports t
     JOIN transport_statuses ts
         ON ts.id = t.status_id
@@ -259,6 +260,10 @@ BEGIN
 
     IF v_transport_status <> 'ZAPLANOWANY' THEN
         RAISE EXCEPTION 'Nie mozna przypisac pojazdu do transportu o statusie %', v_transport_status;
+    END IF;
+
+    IF v_current_vehicle_id = p_vehicle_id THEN
+        RETURN;
     END IF;
 
     SELECT available, load_capacity
@@ -299,6 +304,16 @@ BEGIN
     UPDATE transports
     SET vehicle_id = p_vehicle_id
     WHERE id = p_transport_id;
+
+    IF v_current_vehicle_id IS NOT NULL THEN
+        UPDATE vehicles
+        SET available = TRUE
+        WHERE id = v_current_vehicle_id;
+    END IF;
+
+    UPDATE vehicles
+    SET available = FALSE
+    WHERE id = p_vehicle_id;
 END;
 $$;
 
@@ -473,6 +488,13 @@ BEGIN
     UPDATE transports
     SET status_id = v_status_id
     WHERE id = p_transport_id;
+
+    IF p_status_name IN ('DOSTARCZONY', 'NIEUDANY', 'ANULOWANY')
+       AND v_vehicle_id IS NOT NULL THEN
+        UPDATE vehicles
+        SET available = TRUE
+        WHERE id = v_vehicle_id;
+    END IF;
 END;
 $$;
 

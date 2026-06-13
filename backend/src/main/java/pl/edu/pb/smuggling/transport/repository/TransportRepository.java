@@ -42,9 +42,9 @@ public interface TransportRepository extends JpaRepository<Transport, Integer> {
                         ))
                         OR (:smuggler = true AND sa.smuggler.userId = :userId AND sa.active = true)
                     )
-                    AND (:statusName IS NULL OR t.status.name = :statusName)
-                    AND (:dateFrom IS NULL OR t.transportDate >= :dateFrom)
-                    AND (:dateTo IS NULL OR t.transportDate <= :dateTo)
+                    AND (:statusFilterEnabled = false OR t.status.name = :statusName)
+                    AND (:dateFromFilterEnabled = false OR t.transportDate >= :dateFrom)
+                    AND (:dateToFilterEnabled = false OR t.transportDate <= :dateTo)
                     """,
             countQuery = """
                     SELECT COUNT(DISTINCT t)
@@ -58,9 +58,9 @@ public interface TransportRepository extends JpaRepository<Transport, Integer> {
                         ))
                         OR (:smuggler = true AND sa.smuggler.userId = :userId AND sa.active = true)
                     )
-                    AND (:statusName IS NULL OR t.status.name = :statusName)
-                    AND (:dateFrom IS NULL OR t.transportDate >= :dateFrom)
-                    AND (:dateTo IS NULL OR t.transportDate <= :dateTo)
+                    AND (:statusFilterEnabled = false OR t.status.name = :statusName)
+                    AND (:dateFromFilterEnabled = false OR t.transportDate >= :dateFrom)
+                    AND (:dateToFilterEnabled = false OR t.transportDate <= :dateTo)
                     """
     )
     Page<Transport> findVisibleTransports(
@@ -68,8 +68,11 @@ public interface TransportRepository extends JpaRepository<Transport, Integer> {
             @Param("admin") boolean admin,
             @Param("boss") boolean boss,
             @Param("smuggler") boolean smuggler,
+            @Param("statusFilterEnabled") boolean statusFilterEnabled,
             @Param("statusName") String statusName,
+            @Param("dateFromFilterEnabled") boolean dateFromFilterEnabled,
             @Param("dateFrom") LocalDate dateFrom,
+            @Param("dateToFilterEnabled") boolean dateToFilterEnabled,
             @Param("dateTo") LocalDate dateTo,
             Pageable pageable
     );
