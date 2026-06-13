@@ -16,7 +16,7 @@ Pozostałe moduły, takie jak transporty, trasy, pojazdy, ładunki, magazyny, p�
 
 W zakresie opisanych modułów użyto:
 
-- Java 25,
+- Java 21,
 - Spring Boot 4.0.6,
 - Spring MVC,
 - Spring Security,

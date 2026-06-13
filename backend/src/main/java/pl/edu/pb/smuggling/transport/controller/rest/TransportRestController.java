@@ -42,6 +42,7 @@ public class TransportRestController {
     @GetMapping
     public ResponseEntity<Page<TransportDto>> getTransports(@AuthenticationPrincipal UserDetails userDetails,
                                                             @RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "10") int size,
                                                             @RequestParam(defaultValue = "transportDate") String sort,
                                                             @RequestParam(defaultValue = "desc") String dir,
                                                             @RequestParam(required = false) String status,
@@ -49,7 +50,7 @@ public class TransportRestController {
         Page<Transport> transports = transportService.getVisibleTransports(
                 userDetails.getUsername(),
                 Math.max(page, 0),
-                10,
+                Math.max(size, 1),
                 sort,
                 dir,
                 status,
@@ -86,7 +87,7 @@ public class TransportRestController {
                                                         @Valid @RequestBody TransportFormDto request,
                                                         @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportService.updateTransport(id, request);
             return ResponseEntity.ok(TransportDto.fromEntity(transportService.getTransportById(id)));
         } catch (IllegalArgumentException e) {
@@ -131,7 +132,7 @@ public class TransportRestController {
                                                       @PathVariable Integer vehicleId,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.assignVehicle(id, vehicleId);
             return ResponseEntity.ok(TransportDto.fromEntity(transportService.getTransportById(id)));
         } catch (IllegalArgumentException e) {
@@ -147,7 +148,7 @@ public class TransportRestController {
                                                     @PathVariable Integer cargoId,
                                                     @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.assignCargo(id, cargoId);
             return ResponseEntity.ok(TransportDto.fromEntity(transportService.getTransportById(id)));
         } catch (IllegalArgumentException e) {
@@ -163,7 +164,7 @@ public class TransportRestController {
                                                       @PathVariable Integer cargoId,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.unassignCargo(id, cargoId);
             return ResponseEntity.ok(TransportDto.fromEntity(transportService.getTransportById(id)));
         } catch (IllegalArgumentException e) {
@@ -177,7 +178,7 @@ public class TransportRestController {
                                                                       @Valid @RequestBody AssignSmugglerRequest request,
                                                                       @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.assignSmuggler(id, request.getSmugglerId(), request.getNote());
             return ResponseEntity.ok(getAssignmentDtos(id));
         } catch (IllegalArgumentException e) {
@@ -193,7 +194,7 @@ public class TransportRestController {
                                                                        @PathVariable Integer assignmentId,
                                                                        @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.unassignSmuggler(assignmentId);
             return ResponseEntity.ok(getAssignmentDtos(id));
         } catch (IllegalArgumentException e) {

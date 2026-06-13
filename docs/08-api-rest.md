@@ -69,7 +69,7 @@ Bazowy adres:
 
 | Metoda | Endpoint | Role | Opis |
 |---|---|---|---|
-| `GET` | `/api/routes?page=0&size=10&sort=id&dir=asc` | `ADMIN`, `BOSS`, `SMUGGLER` | Stronicowana lista tras |
+| `GET` | `/api/routes?page=0&size=10&sort=name&dir=asc` | `ADMIN`, `BOSS`, `SMUGGLER` | Stronicowana lista tras |
 | `GET` | `/api/routes/{id}` | `ADMIN`, `BOSS`, `SMUGGLER` | Szczegóły trasy |
 | `POST` | `/api/routes` | `ADMIN`, `BOSS` | Utworzenie trasy |
 | `PUT` | `/api/routes/{id}` | `ADMIN`, `BOSS` | Edycja trasy |
@@ -94,7 +94,7 @@ Bazowy adres:
 
 | Metoda | Endpoint | Role | Opis |
 |---|---|---|---|
-| `GET` | `/api/vehicles?page=0&size=10&sort=id&dir=asc` | `ADMIN`, `BOSS`, `SMUGGLER` | Stronicowana lista pojazdów |
+| `GET` | `/api/vehicles?page=0&size=10&sort=registrationNumber&dir=asc` | `ADMIN`, `BOSS`, `SMUGGLER` | Stronicowana lista pojazdów |
 | `GET` | `/api/vehicles/{id}` | `ADMIN`, `BOSS`, `SMUGGLER` | Szczegóły pojazdu |
 | `POST` | `/api/vehicles` | `ADMIN`, `BOSS` | Utworzenie pojazdu |
 | `PUT` | `/api/vehicles/{id}` | `ADMIN`, `BOSS` | Edycja pojazdu |
@@ -137,8 +137,13 @@ Bazowy adres:
 Lista transportów obsługuje dodatkowe parametry:
 
 - `status` - nazwa statusu, np. `ZAPLANOWANY`,
-- `dateFilter` - `past`, `future` albo puste,
+- `dateFilter` - `ALL`, `TODAY`, `FUTURE`, `NEXT_7` albo `NEXT_30`,
 - `page`, `size`, `sort`, `dir` - paginacja i sortowanie.
+
+Edycja planu transportu, przypisanie pojazdu, przypisanie lub odpiecie ladunku
+oraz dodawanie lub usuwanie przemytnikow sa dozwolone tylko dla transportu w
+statusie `ZAPLANOWANY`. Po przejsciu transportu na status `W_DRODZE` sklad i
+plan transportu sa blokowane przez backend oraz triggery bazodanowe.
 
 Używane DTO:
 

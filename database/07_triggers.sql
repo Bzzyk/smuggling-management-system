@@ -113,6 +113,49 @@ FOR EACH ROW
 EXECUTE FUNCTION set_transport_updated_at();
 
 
+-- PREVENT_NON_PLANNED_TRANSPORT_EDIT
+
+
+-- Po wyjsciu ze statusu ZAPLANOWANY transportu nie mozna juz edytowac.
+-- Dozwolona pozostaje tylko zmiana statusu obslugiwana przez osobne reguly.
+
+CREATE OR REPLACE FUNCTION prevent_non_planned_transport_edit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_current_status VARCHAR(30);
+BEGIN
+    IF NEW.order_id IS DISTINCT FROM OLD.order_id
+       OR NEW.route_id IS DISTINCT FROM OLD.route_id
+       OR NEW.vehicle_id IS DISTINCT FROM OLD.vehicle_id
+       OR NEW.start_location IS DISTINCT FROM OLD.start_location
+       OR NEW.destination IS DISTINCT FROM OLD.destination
+       OR NEW.transport_date IS DISTINCT FROM OLD.transport_date
+       OR NEW.planned_arrival_date IS DISTINCT FROM OLD.planned_arrival_date
+       OR NEW.description IS DISTINCT FROM OLD.description THEN
+        SELECT name
+        INTO v_current_status
+        FROM transport_statuses
+        WHERE id = OLD.status_id;
+
+        IF v_current_status <> 'ZAPLANOWANY' THEN
+            RAISE EXCEPTION 'Transport % nie jest zaplanowany i nie moze byc edytowany', OLD.id;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_non_planned_transport_edit ON transports;
+
+CREATE TRIGGER trg_prevent_non_planned_transport_edit
+BEFORE UPDATE ON transports
+FOR EACH ROW
+EXECUTE FUNCTION prevent_non_planned_transport_edit();
+
+
 -- VALIDATE_TRANSPORT_STATUS_CHANGE
 
 
@@ -280,6 +323,62 @@ FOR EACH ROW
 EXECUTE FUNCTION validate_smuggler_assignment();
 
 
+-- PREVENT_NON_PLANNED_ASSIGNMENT_EDIT
+
+
+-- Przypisania ekipy mozna recznie dodawac i usuwac tylko dla transportu
+-- zaplanowanego. Aktualizacja active=false jest nadal dozwolona dla triggera,
+-- ktory zamyka przypisania po zakonczeniu transportu.
+
+CREATE OR REPLACE FUNCTION prevent_non_planned_assignment_edit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_transport_id INT;
+    v_transport_status VARCHAR(30);
+BEGIN
+    v_transport_id := CASE
+        WHEN TG_OP = 'DELETE' THEN OLD.transport_id
+        ELSE NEW.transport_id
+    END;
+
+    SELECT ts.name
+    INTO v_transport_status
+    FROM transports t
+    JOIN transport_statuses ts
+        ON ts.id = t.status_id
+    WHERE t.id = v_transport_id;
+
+    IF v_transport_status <> 'ZAPLANOWANY' THEN
+        IF TG_OP = 'DELETE' THEN
+            RAISE EXCEPTION 'Nie mozna usunac przypisania ekipy dla transportu o statusie %', v_transport_status;
+        ELSIF TG_OP = 'INSERT' THEN
+            RAISE EXCEPTION 'Nie mozna dodac przypisania ekipy dla transportu o statusie %', v_transport_status;
+        ELSIF NEW.transport_id IS DISTINCT FROM OLD.transport_id
+           OR NEW.smuggler_id IS DISTINCT FROM OLD.smuggler_id
+           OR NEW.note IS DISTINCT FROM OLD.note
+           OR (NEW.active = TRUE AND OLD.active = FALSE) THEN
+            RAISE EXCEPTION 'Nie mozna edytowac przypisania ekipy dla transportu o statusie %', v_transport_status;
+        END IF;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_non_planned_assignment_edit ON smuggler_assignments;
+
+CREATE TRIGGER trg_prevent_non_planned_assignment_edit
+BEFORE INSERT OR UPDATE OR DELETE ON smuggler_assignments
+FOR EACH ROW
+EXECUTE FUNCTION prevent_non_planned_assignment_edit();
+
+
 -- CLOSE_TRANSPORT_ASSIGNMENTS_AND_UPDATE_STATS
 
 
@@ -345,6 +444,104 @@ CREATE TRIGGER trg_close_transport_assignments_and_update_stats
 AFTER UPDATE OF status_id ON transports
 FOR EACH ROW
 EXECUTE FUNCTION close_transport_assignments_and_update_stats();
+
+
+-- REMOVE_TRANSPORT_CARGO_FROM_WAREHOUSE
+
+
+-- Trigger po rozpoczeciu transportu usuwa jego ladunek ze stanu magazynowego.
+-- Ladunek zostaje przypisany do transportu, ale nie jest juz widoczny jako
+-- fizycznie przechowywany w magazynie.
+
+CREATE OR REPLACE FUNCTION remove_transport_cargo_from_warehouse()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_old_status VARCHAR(30);
+    v_new_status VARCHAR(30);
+BEGIN
+    SELECT name
+    INTO v_old_status
+    FROM transport_statuses
+    WHERE id = OLD.status_id;
+
+    SELECT name
+    INTO v_new_status
+    FROM transport_statuses
+    WHERE id = NEW.status_id;
+
+    IF v_old_status IS DISTINCT FROM v_new_status
+       AND v_new_status = 'W_DRODZE' THEN
+        DELETE FROM warehouse_stock
+        WHERE cargo_id IN (
+            SELECT id
+            FROM cargo
+            WHERE transport_id = NEW.id
+        );
+
+        UPDATE cargo
+        SET warehouse_id = NULL
+        WHERE transport_id = NEW.id
+          AND warehouse_id IS NOT NULL;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_remove_transport_cargo_from_warehouse ON transports;
+
+CREATE TRIGGER trg_remove_transport_cargo_from_warehouse
+AFTER UPDATE OF status_id ON transports
+FOR EACH ROW
+EXECUTE FUNCTION remove_transport_cargo_from_warehouse();
+
+
+-- PREVENT_NON_PLANNED_CARGO_ASSIGNMENT_EDIT
+
+
+-- Ladunek mozna przypiac lub odpiac tylko od transportu zaplanowanego.
+
+CREATE OR REPLACE FUNCTION prevent_non_planned_cargo_assignment_edit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_transport_id INT;
+    v_transport_status VARCHAR(30);
+BEGIN
+    IF NEW.transport_id IS NOT DISTINCT FROM OLD.transport_id THEN
+        RETURN NEW;
+    END IF;
+
+    v_transport_id := COALESCE(OLD.transport_id, NEW.transport_id);
+
+    IF v_transport_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    SELECT ts.name
+    INTO v_transport_status
+    FROM transports t
+    JOIN transport_statuses ts
+        ON ts.id = t.status_id
+    WHERE t.id = v_transport_id;
+
+    IF v_transport_status <> 'ZAPLANOWANY' THEN
+        RAISE EXCEPTION 'Nie mozna zmienic ladunku dla transportu o statusie %', v_transport_status;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_non_planned_cargo_assignment_edit ON cargo;
+
+CREATE TRIGGER trg_prevent_non_planned_cargo_assignment_edit
+BEFORE UPDATE OF transport_id ON cargo
+FOR EACH ROW
+EXECUTE FUNCTION prevent_non_planned_cargo_assignment_edit();
 
 
 -- REFRESH_ORDER_ESTIMATED_PROFIT

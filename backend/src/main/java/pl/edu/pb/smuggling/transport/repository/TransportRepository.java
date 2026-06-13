@@ -25,6 +25,7 @@ public interface TransportRepository extends JpaRepository<Transport, Integer> {
             FROM Transport t
             JOIN SmugglerAssignment sa ON sa.transport = t
             WHERE sa.smuggler.userId = :userId
+              AND sa.active = true
             """)
     java.util.List<Transport> findVisibleForSmuggler(@Param("userId") Integer userId);
 
@@ -39,7 +40,7 @@ public interface TransportRepository extends JpaRepository<Transport, Integer> {
                             t.order.createdBy.id = :userId
                             OR t.order.responsibleUser.id = :userId
                         ))
-                        OR (:smuggler = true AND sa.smuggler.userId = :userId)
+                        OR (:smuggler = true AND sa.smuggler.userId = :userId AND sa.active = true)
                     )
                     AND (:statusName IS NULL OR t.status.name = :statusName)
                     AND (:dateFrom IS NULL OR t.transportDate >= :dateFrom)
@@ -55,7 +56,7 @@ public interface TransportRepository extends JpaRepository<Transport, Integer> {
                             t.order.createdBy.id = :userId
                             OR t.order.responsibleUser.id = :userId
                         ))
-                        OR (:smuggler = true AND sa.smuggler.userId = :userId)
+                        OR (:smuggler = true AND sa.smuggler.userId = :userId AND sa.active = true)
                     )
                     AND (:statusName IS NULL OR t.status.name = :statusName)
                     AND (:dateFrom IS NULL OR t.transportDate >= :dateFrom)

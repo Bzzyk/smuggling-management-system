@@ -125,6 +125,13 @@ public class TransportService {
         getManageableTransportById(id, username);
     }
 
+    public void assertCanEditPlannedTransport(Integer id, String username) {
+        Transport transport = getManageableTransportById(id, username);
+        if (transport.getStatus() == null || !STATUS_PLANNED.equals(transport.getStatus().getName())) {
+            throw new IllegalArgumentException("Transport mozna edytowac tylko w statusie ZAPLANOWANY.");
+        }
+    }
+
     @Transactional
     public Transport createTransport(TransportFormDto dto) {
         Transport transport = new Transport();

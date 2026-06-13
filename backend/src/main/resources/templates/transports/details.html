@@ -15,7 +15,7 @@
                 <div class="text-muted" th:text="${transport.order.title}">Zlecenie</div>
             </div>
         </div>
-        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">
+        <div class="col text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:if="${transport.status.name == 'ZAPLANOWANY'}">
             <a th:href="@{/transports/{id}/edit(id=${transport.id})}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil"></i> Edytuj plan
             </a>
@@ -151,7 +151,7 @@
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Pojazd</h5>
-                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:href="@{/transports/{id}/vehicles(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Wybierz</a>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:if="${transport.status.name == 'ZAPLANOWANY'}" th:href="@{/transports/{id}/vehicles(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Wybierz</a>
                         </div>
                         <div class="card-body">
                             <div th:if="${transport.vehicle != null}">
@@ -178,7 +178,7 @@
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Ladunek</h5>
-                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:href="@{/transports/{id}/cargos(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Dodaj</a>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:if="${transport.status.name == 'ZAPLANOWANY'}" th:href="@{/transports/{id}/cargos(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Dodaj</a>
                         </div>
                         <div class="card-body">
                             <div class="mb-2">
@@ -191,7 +191,7 @@
                                         <div class="fw-bold" th:text="${cargo.name}">Ladunek</div>
                                         <small class="text-muted"><span th:text="${cargo.packagesCount}">0</span> paczek</small>
                                     </div>
-                                    <form sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:action="@{/transports/{id}/cargos/{cargoId}/unassign(id=${transport.id}, cargoId=${cargo.id})}" method="post">
+                                    <form sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:if="${transport.status.name == 'ZAPLANOWANY'}" th:action="@{/transports/{id}/cargos/{cargoId}/unassign(id=${transport.id}, cargoId=${cargo.id})}" method="post">
                                         <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
                                     </form>
                                 </li>
@@ -205,7 +205,7 @@
                     <div class="card shadow-sm">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Ekipa</h5>
-                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:href="@{/transports/{id}/smugglers(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Dodaj przemytnika</a>
+                            <a sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:if="${transport.status.name == 'ZAPLANOWANY'}" th:href="@{/transports/{id}/smugglers(id=${transport.id})}" class="btn btn-sm btn-outline-primary">Dodaj przemytnika</a>
                         </div>
                         <div class="card-body p-0">
                             <table class="table table-hover mb-0 align-middle">
@@ -223,7 +223,7 @@
                                     <td th:text="${assignment.smuggler.experienceLevel}">SENIOR</td>
                                     <td th:text="${assignment.note ?: '-'}">-</td>
                                     <td class="text-end">
-                                        <form sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:action="@{/transports/{id}/unassign/{aid}(id=${transport.id}, aid=${assignment.id})}" method="post" class="d-inline">
+                                        <form sec:authorize="hasAnyRole('ADMIN', 'BOSS')" th:if="${transport.status.name == 'ZAPLANOWANY'}" th:action="@{/transports/{id}/unassign/{aid}(id=${transport.id}, aid=${assignment.id})}" method="post" class="d-inline">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                                 <i class="bi bi-person-x"></i>
                                             </button>

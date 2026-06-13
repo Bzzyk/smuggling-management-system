@@ -52,7 +52,7 @@ W systemie przewidziano następujące role:
 |---|---|
 | `ADMIN` | Zarządza użytkownikami i rolami |
 | `BOSS` | Tworzy zlecenia, zarządza transportami i widzi raporty |
-| `SMUGGLER` | Widzi przypisane transporty i może aktualizować ich status |
+| `SMUGGLER` | Widzi aktywnie przypisane do siebie transporty |
 | `ACCOUNTANT` | Zarządza płatnościami i raportami finansowymi |
 
 ---

@@ -113,6 +113,7 @@ public class TransportController {
     public String showEditForm(@PathVariable Integer id,
                                @AuthenticationPrincipal UserDetails userDetails,
                                Model model) {
+        transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
         Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         TransportFormDto dto = new TransportFormDto();
         dto.setId(transport.getId());
@@ -142,7 +143,7 @@ public class TransportController {
             return "transports/form";
         }
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportService.updateTransport(id, form);
             redirectAttributes.addFlashAttribute("successMessage", "Zaktualizowano parametry planu transportu.");
             return "redirect:/transports/" + id;
@@ -175,6 +176,7 @@ public class TransportController {
                                 @RequestParam(defaultValue = "0") int page,
                                 @AuthenticationPrincipal UserDetails userDetails,
                                 Model model) {
+        transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
         Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         Page<AvailableVehicleDto> vehiclePage = transportAvailabilityService.getAssignableVehicles(id, vehicleType, safePage(page), PICKER_PAGE_SIZE);
         model.addAttribute("transport", transport);
@@ -193,9 +195,11 @@ public class TransportController {
                                 @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.assignVehicle(id, vehicleId);
             redirectAttributes.addFlashAttribute("successMessage", "Pojazd zostal przypisany przez procedure bazodanowa.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (org.springframework.dao.DataAccessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", extractDbErrorMessage(e, "Nie mozna przypisac pojazdu."));
         }
@@ -208,6 +212,7 @@ public class TransportController {
                               @RequestParam(defaultValue = "0") int page,
                               @AuthenticationPrincipal UserDetails userDetails,
                               Model model) {
+        transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
         Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         Page<AvailableCargoDto> cargoPage = transportAvailabilityService.getAssignableCargos(id, safePage(page), PICKER_PAGE_SIZE);
         model.addAttribute("transport", transport);
@@ -223,7 +228,7 @@ public class TransportController {
                               @AuthenticationPrincipal UserDetails userDetails,
                               RedirectAttributes redirectAttributes) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.assignCargo(id, cargoId);
             redirectAttributes.addFlashAttribute("successMessage", "Ladunek zostal przypisany do transportu.");
         } catch (IllegalArgumentException e) {
@@ -241,7 +246,7 @@ public class TransportController {
                                 @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.unassignCargo(id, cargoId);
             redirectAttributes.addFlashAttribute("successMessage", "Ladunek zostal odpiety od transportu.");
         } catch (IllegalArgumentException e) {
@@ -258,6 +263,7 @@ public class TransportController {
                                  @RequestParam(defaultValue = "0") int page,
                                  @AuthenticationPrincipal UserDetails userDetails,
                                  Model model) {
+        transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
         Transport transport = transportService.getManageableTransportById(id, userDetails.getUsername());
         Page<AvailableSmugglerDto> smugglerPage = transportAvailabilityService.getAssignableSmugglers(
                 experienceLevel,
@@ -292,7 +298,7 @@ public class TransportController {
                                  @AuthenticationPrincipal UserDetails userDetails,
                                  RedirectAttributes redirectAttributes) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.assignSmuggler(id, smugglerId, note);
             redirectAttributes.addFlashAttribute("successMessage", "Przemytnik zostal przypisany przez procedure bazodanowa.");
         } catch (IllegalArgumentException e) {
@@ -310,9 +316,11 @@ public class TransportController {
                                    @AuthenticationPrincipal UserDetails userDetails,
                                    RedirectAttributes redirectAttributes) {
         try {
-            transportService.assertCanManageTransport(id, userDetails.getUsername());
+            transportService.assertCanEditPlannedTransport(id, userDetails.getUsername());
             transportAssignmentService.unassignSmuggler(assignmentId);
             redirectAttributes.addFlashAttribute("successMessage", "Usunieto przypisanie z transportu.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (org.springframework.dao.DataAccessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", extractDbErrorMessage(e, "Wystapil blad bazy danych podczas usuwania przypisania."));
         }
