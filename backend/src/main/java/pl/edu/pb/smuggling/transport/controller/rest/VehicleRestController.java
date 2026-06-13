@@ -32,9 +32,10 @@ public class VehicleRestController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")
     @GetMapping
     public ResponseEntity<Page<VehicleDto>> getVehicles(@RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "10") int size,
                                                         @RequestParam(defaultValue = "registrationNumber") String sort,
                                                         @RequestParam(defaultValue = "asc") String dir) {
-        return ResponseEntity.ok(vehicleService.getVehiclesPage(page, 10, sort, dir).map(VehicleDto::fromEntity));
+        return ResponseEntity.ok(vehicleService.getVehiclesPage(page, Math.max(size, 1), sort, dir).map(VehicleDto::fromEntity));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")

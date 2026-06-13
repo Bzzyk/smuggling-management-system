@@ -116,22 +116,36 @@ Filip Kamiński odpowiada za przygotowanie tabel związanych z transportami, tra
 ### Widoki SQL
 
 - `v_active_transports` — widok pokazujący aktywne transporty.
-- `v_smuggler_workload` — widok pokazujący obciążenie przemytników transportami.
+- `v_available_smugglers` — widok pokazujący aktywnych przemytników dostępnych do przypisania.
+- `v_available_vehicles` — widok pokazujący pojazdy dostępne do przypisania.
+- `v_available_cargo` — widok pokazujący ładunki dostępne do przypisania.
+- `v_transport_details` — widok pokazujący szczegóły transportu.
+- `v_route_summary` — widok pokazujący podsumowanie tras.
 
 ### Funkcje SQL
 
-- `calculate_route_risk(route_id)` — funkcja obliczająca poziom ryzyka danej trasy.
-- `count_active_transports_for_smuggler(user_id)` — funkcja licząca aktywne transporty przypisane do danego przemytnika.
+- `calculate_transport_risk_score(transport_id)` — funkcja obliczająca poziom ryzyka transportu.
+- `estimate_transport_operational_cost(transport_id)` — funkcja obliczająca szacunkowy koszt operacyjny transportu.
+- `calculate_transport_estimated_profit(transport_id)` — funkcja obliczająca przewidywany zysk transportu.
+- `refresh_order_estimated_profit(order_id)` — funkcja przeliczająca przewidywany zysk zlecenia.
 
 ### Procedury SQL
 
 - `assign_smuggler_to_transport(...)` — procedura przypisująca przemytnika do transportu.
+- `assign_vehicle_to_transport(...)` — procedura przypisująca pojazd do transportu.
+- `assign_cargo_to_transport(...)` — procedura przypisująca ładunek do transportu.
 - `change_transport_status(...)` — procedura zmieniająca status transportu.
 
 ### Triggery SQL
 
-- `trg_audit_transports` — trigger zapisujący historię zmian transportów.
-- `trg_check_transport_dates` — trigger sprawdzający poprawność dat transportu.
+- `trg_set_transport_updated_at` — trigger ustawiający datę aktualizacji transportu.
+- `trg_validate_transport_status_change` — trigger pilnujący poprawnych przejść statusów transportu.
+- `trg_validate_smuggler_assignment` — trigger pilnujący poprawnego przypisania przemytnika.
+- `trg_prevent_non_planned_transport_edit` — trigger blokujący edycję planu po opuszczeniu statusu `ZAPLANOWANY`.
+- `trg_prevent_non_planned_assignment_edit` — trigger blokujący edycję ekipy po opuszczeniu statusu `ZAPLANOWANY`.
+- `trg_remove_transport_cargo_from_warehouse` — trigger zdejmujący ładunek z magazynu po rozpoczęciu transportu.
+- `trg_prevent_non_planned_cargo_assignment_edit` — trigger blokujący zmianę ładunku po opuszczeniu statusu `ZAPLANOWANY`.
+- `trg_close_transport_assignments_and_update_stats` — trigger zamykający przypisania i aktualizujący statystyki po zakończeniu transportu.
 
 ---
 
@@ -284,14 +298,15 @@ Filip Kamiński odpowiada za moduły:
 - `TransportService`
 - `RouteService`
 - `VehicleService`
-- `SmugglerAssignmentService`
+- `TransportAssignmentService`
+- `TransportAvailabilityService`
+- `TransportEstimateService`
 
 ### Kontrolery MVC
 
 - `TransportController`
 - `RouteController`
 - `VehicleController`
-- `SmugglerAssignmentController`
 
 ### Kontrolery REST
 
@@ -443,8 +458,8 @@ Filip Kamiński odpowiada za zabezpieczenie modułów związanych z transportami
 ### Przykładowe reguły
 
 - `ADMIN` i `BOSS` mogą dodawać, edytować i usuwać transporty,
-- `SMUGGLER` może przeglądać tylko przypisane do siebie transporty,
-- `SMUGGLER` może zmienić status przypisanego do siebie transportu,
+- `SMUGGLER` może przeglądać tylko aktywnie przypisane do siebie transporty,
+- `SMUGGLER` nie może zmieniać statusu transportu ani edytować jego składu,
 - `SMUGGLER` nie może usuwać transportów,
 - użytkownik bez odpowiedniej roli nie ma dostępu do modułu transportów.
 
@@ -523,13 +538,13 @@ Kamil odpowiada za:
 - `templates/transports/list.html`
 - `templates/transports/form.html`
 - `templates/transports/details.html`
-- `templates/transports/confirm-delete.html`
+- `templates/transports/select-cargo.html`
+- `templates/transports/select-smuggler.html`
+- `templates/transports/select-vehicle.html`
 - `templates/routes/list.html`
 - `templates/routes/form.html`
-- `templates/routes/details.html`
 - `templates/vehicles/list.html`
 - `templates/vehicles/form.html`
-- `templates/vehicles/details.html`
 
 ### Zakres
 
@@ -748,8 +763,7 @@ Kamil odpowiada za przygotowanie:
 Filip Kamiński odpowiada za przygotowanie:
 
 - części pliku `docs/06-model-danych.md` dotyczącej transportów, tras i pojazdów,
-- części pliku `docs/08-api-rest.md` dotyczącej transportów, tras i pojazdów,
-- `docs/09-modul-transportow.md`.
+- części pliku `docs/08-api-rest.md` dotyczącej transportów, tras i pojazdów.
 
 ### Zakres opisu
 

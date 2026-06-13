@@ -78,8 +78,11 @@ public class TransportService {
                 hasRole(user, ROLE_ADMIN),
                 hasRole(user, ROLE_BOSS),
                 hasRole(user, ROLE_SMUGGLER),
+                normalizedStatus != null,
                 normalizedStatus,
+                dateRange.from() != null,
                 dateRange.from(),
+                dateRange.to() != null,
                 dateRange.to(),
                 pageable
         );
@@ -123,6 +126,13 @@ public class TransportService {
 
     public void assertCanManageTransport(Integer id, String username) {
         getManageableTransportById(id, username);
+    }
+
+    public void assertCanEditPlannedTransport(Integer id, String username) {
+        Transport transport = getManageableTransportById(id, username);
+        if (transport.getStatus() == null || !STATUS_PLANNED.equals(transport.getStatus().getName())) {
+            throw new IllegalArgumentException("Transport mozna edytowac tylko w statusie ZAPLANOWANY.");
+        }
     }
 
     @Transactional

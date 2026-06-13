@@ -46,7 +46,7 @@ Przykładowe role:
 
 - `ADMIN` — zarządza użytkownikami i rolami,
 - `BOSS` — tworzy zlecenia, zarządza transportami i widzi raporty,
-- `SMUGGLER` — widzi przypisane transporty i może aktualizować ich status,
+- `SMUGGLER` — widzi aktywnie przypisane do siebie transporty,
 - `ACCOUNTANT` — zarządza płatnościami i raportami finansowymi.
 
 ### 3.2. Zlecenia
@@ -338,7 +338,7 @@ Może:
 
 - przeglądać swoje transporty,
 - sprawdzać szczegóły trasy,
-- aktualizować status przypisanego transportu.
+- sprawdzać szczegóły przypisanego ładunku i ekipy.
 
 Nie powinien mieć dostępu do:
 
@@ -622,7 +622,9 @@ Przykładowe widoki:
 - `v_active_orders` — aktywne zlecenia,
 - `v_active_transports` — aktywne transporty,
 - `v_user_permissions` — użytkownicy i ich role,
-- `v_smuggler_workload` — liczba aktywnych transportów przypisanych do przemytników,
+- `v_available_smugglers` — lista przemytników dostępnych do przypisania,
+- `v_available_vehicles` — lista pojazdów dostępnych do przypisania,
+- `v_available_cargo` — lista ładunków dostępnych do przypisania,
 - `v_warehouse_stock` — aktualny stan magazynów,
 - `v_profit_report` — zestawienie zysków i kosztów.
 

@@ -31,9 +31,10 @@ public class RouteRestController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")
     @GetMapping
     public ResponseEntity<Page<RouteDto>> getRoutes(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size,
                                                     @RequestParam(defaultValue = "name") String sort,
                                                     @RequestParam(defaultValue = "asc") String dir) {
-        return ResponseEntity.ok(routeService.getRoutesPage(page, 10, sort, dir).map(RouteDto::fromEntity));
+        return ResponseEntity.ok(routeService.getRoutesPage(page, Math.max(size, 1), sort, dir).map(RouteDto::fromEntity));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'BOSS', 'SMUGGLER')")

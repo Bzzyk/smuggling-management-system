@@ -52,7 +52,7 @@ W systemie przewidziano następujące role:
 |---|---|
 | `ADMIN` | Zarządza użytkownikami i rolami |
 | `BOSS` | Tworzy zlecenia, zarządza transportami i widzi raporty |
-| `SMUGGLER` | Widzi przypisane transporty i może aktualizować ich status |
+| `SMUGGLER` | Widzi aktywnie przypisane do siebie transporty |
 | `ACCOUNTANT` | Zarządza płatnościami i raportami finansowymi |
 
 ---
@@ -116,6 +116,16 @@ Szczegółowy podział pracy znajduje się w pliku:
 Opis zakresu systemu, ról użytkowników, głównych encji, operacji biznesowych oraz wymagań znajduje się w pliku:
 
 `docs/05-analiza-biznesowa.md`
+
+## Model danych
+
+Opis modelu danych oraz diagram ERD znajduja sie w pliku:
+
+`docs/06-model-danych.md`
+
+Bezposredni plik diagramu:
+
+`docs/diagram.svg`
 
 ## Autorzy
 

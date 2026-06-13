@@ -30,7 +30,7 @@ public class TransportAvailabilityService {
         int requiredCapacity = Math.max(getCargoPackagesTotal(transportId), 1);
         Pageable pageable = PageRequest.of(page, size);
         List<Object> params = new ArrayList<>();
-        params.add(requiredCapacity);
+        params.add(requiredCapacity); 
 
         StringBuilder where = new StringBuilder(" WHERE load_capacity >= ?");
         if (vehicleType != null && !vehicleType.isBlank()) {

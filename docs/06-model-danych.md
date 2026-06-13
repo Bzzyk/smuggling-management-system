@@ -4,6 +4,10 @@ Dokument opisuje relacyjny model danych systemu. Baza danych zostala
 podzielona na trzy glowne obszary: uzytkownicy i zlecenia, transporty oraz
 ladunki, magazyny i platnosci.
 
+## Diagram ERD
+
+![Diagram ERD systemu](diagram.svg)
+
 ## Lista encji
 
 | Tabela                    | Opis                                                            |
@@ -139,7 +143,11 @@ ograniczenia `CHECK` oraz indeksy. Przykladowo:
   najmniej jednego aktywnego przemytnika,
 - baza pilnuje, aby ladunek nie przekroczyl ladownosci przypisanego pojazdu,
 - baza pilnuje, aby przemytnik lub pojazd nie byl jednoczesnie uzywany w
-  innym aktywnym transporcie.
+  innym aktywnym transporcie,
+- po opuszczeniu statusu `ZAPLANOWANY` baza blokuje edycje planu transportu,
+  zmiany ladunku oraz reczne zmiany przypisanej ekipy,
+- po rozpoczeciu transportu ladunek jest usuwany ze stanu magazynowego i nie
+  ma juz przypisanego magazynu w tabeli `cargo`.
 
 ## Historia zmian
 
@@ -205,9 +213,13 @@ zostanie wykonana przez procedure, aplikacje czy reczny SQL.
 | Trigger                                                  | Tabela                  | Opis                                                                                                 |
 | -------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
 | `trg_set_transport_updated_at`                           | `transports`            | Ustawia `updated_at` przy kazdej aktualizacji transportu.                                             |
+| `trg_prevent_non_planned_transport_edit`                 | `transports`            | Blokuje edycje planu transportu, pojazdu, trasy, dat i opisu po opuszczeniu statusu `ZAPLANOWANY`. |
 | `trg_validate_transport_status_change`                   | `transports`            | Pilnuje dozwolonych przejsc statusow transportu oraz wymaga pojazdu, ladunku i przemytnika przy rozpoczeciu transportu. Sprawdza tez, czy ladunek miesci sie w pojezdzie. |
 | `trg_validate_smuggler_assignment`                       | `smuggler_assignments`  | Blokuje aktywne przypisanie przemytnika do transportu innego niz `ZAPLANOWANY` oraz blokuje zajetego lub nieaktywnego przemytnika. |
+| `trg_prevent_non_planned_assignment_edit`                 | `smuggler_assignments`  | Blokuje dodawanie, usuwanie i reczna edycje ekipy, jezeli transport nie jest juz w statusie `ZAPLANOWANY`. |
 | `trg_close_transport_assignments_and_update_stats`       | `transports`            | Po zmianie statusu na `DOSTARCZONY`, `NIEUDANY` albo `ANULOWANY` dezaktywuje przypisania, a dla sukcesu lub porazki aktualizuje statystyki przemytnikow. |
+| `trg_remove_transport_cargo_from_warehouse`              | `transports`            | Po rozpoczeciu transportu usuwa przypisany ladunek ze stanu magazynowego i czysci `cargo.warehouse_id`. |
+| `trg_prevent_non_planned_cargo_assignment_edit`          | `cargo`                 | Blokuje przypinanie i odpinanie ladunku od transportu, ktory nie jest juz w statusie `ZAPLANOWANY`. |
 | `trg_refresh_order_profit_transports`                    | `transports`            | Po dodaniu, edycji lub usunieciu transportu przelicza przewidywany zysk powiazanego zlecenia. |
 | `trg_refresh_order_profit_cargo`                         | `cargo`                 | Po zmianie ladunku, jego wartosci, liczby paczek lub przypisania do transportu odswieza przewidywany zysk zlecenia. |
 | `trg_refresh_order_profit_smuggler_assignments`          | `smuggler_assignments`  | Po zmianie skladu ekipy transportu odswieza przewidywany zysk zlecenia, poniewaz doswiadczenie przemytnikow wplywa na koszt operacyjny. |
