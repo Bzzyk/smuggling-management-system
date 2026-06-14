@@ -37,7 +37,7 @@
                         <th scope="col">Typ</th>
                         <th scope="col">
                             <a class="text-decoration-none text-dark"
-                               th:href="@{/vehicles(sort='loadCapacity', dir=${sort == 'loadCapacity' ? reverseDir : 'asc'})}">Ladownosc (kg)</a>
+                               th:href="@{/vehicles(sort='loadCapacity', dir=${sort == 'loadCapacity' ? reverseDir : 'asc'})}">Ladownosc</a>
                         </th>
                         <th scope="col">Status</th>
                         <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>

@@ -60,13 +60,10 @@
 
                         <!-- Ładowność -->
                         <div class="mb-3">
-                            <label for="loadCapacity" class="form-label fw-bold">Ładowność (kg)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="loadCapacity" th:field="*{loadCapacity}"
-                                       th:classappend="${#fields.hasErrors('loadCapacity')} ? 'is-invalid' : ''" required>
-                                <span class="input-group-text">kg</span>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('loadCapacity')}" th:errors="*{loadCapacity}">Błąd ładowności</div>
-                            </div>
+                            <label for="loadCapacity" class="form-label fw-bold">Ładowność</label>
+                            <input type="number" class="form-control" id="loadCapacity" th:field="*{loadCapacity}"
+                                   th:classappend="${#fields.hasErrors('loadCapacity')} ? 'is-invalid' : ''" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('loadCapacity')}" th:errors="*{loadCapacity}">Błąd ładowności</div>
                         </div>
 
                         <!-- Status dostępności -->
