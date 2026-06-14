@@ -1,48 +1,258 @@
 <!DOCTYPE html>
-<html lang="pl" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragments/layout}">
+<html lang="pl"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{fragments/layout}">
 <head>
     <title>Dashboard - SMS</title>
 </head>
 <body>
-<div layout:fragment="content" class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Witaj w Systemie Zarządzania Przemytem</h1>
-            
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card bg-primary text-white h-100 shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">Zlecenia</h5>
-                            <p class="card-text">Przejdź do zarządzania zleceniami.</p>
-                            <a href="/orders" class="btn btn-light btn-sm">Przejdź</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-4 mb-4">
-                    <div class="card bg-success text-white h-100 shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">Transporty</h5>
-                            <p class="card-text">Podgląd aktualnych transportów i tras.</p>
-                            <a href="/transports" class="btn btn-light btn-sm">Przejdź</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-4 mb-4">
-                    <div class="card bg-warning text-dark h-100 shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">Magazyny i Ładunki</h5>
-                            <p class="card-text">Sprawdź stany magazynowe.</p>
-                            <a href="/cargos" class="btn btn-dark btn-sm">Przejdź</a>
-                        </div>
-                    </div>
-                </div>
+<div layout:fragment="content" class="container py-4">
+    <style>
+        .dashboard-hero {
+            background: linear-gradient(135deg, #1f2937 0%, #334155 55%, #0f766e 100%);
+            color: #fff;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-hero h1 {
+            font-size: 2.1rem;
+            line-height: 1.15;
+        }
+
+        .dashboard-card {
+            border: 0;
+            border-radius: 8px;
+            box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.08);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.7rem 1.4rem rgba(15, 23, 42, 0.12);
+        }
+
+        .dashboard-icon {
+            width: 2.6rem;
+            height: 2.6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.35rem;
+        }
+
+        .dashboard-section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+    </style>
+
+    <section class="dashboard-hero">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div>
+                <div class="small text-white-50 mb-2">Smuggling Management System</div>
+                <h1 class="fw-bold mb-2">Pulpit operacyjny</h1>
+                <p class="mb-0 text-white-75">
+                    Szybki dostep do modulow dostepnych dla Twojej roli. Widok pokazuje tylko sekcje,
+                    do ktorych masz uprawnienia w aplikacji.
+                </p>
             </div>
-            
+            <div class="align-self-lg-end">
+                <span class="badge bg-light text-dark me-1 mb-1" th:each="auth : ${#authentication.principal.authorities}"
+                      th:text="${#strings.replace(auth.authority, 'ROLE_', '')}">ROLA</span>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section sec:authorize="hasAnyRole('BOSS', 'SMUGGLER')" class="mb-4">
+        <div class="dashboard-section-title mb-3">Operacje</div>
+        <div class="row g-3">
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasAnyRole('BOSS', 'SMUGGLER')">
+                <a th:href="@{/orders}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-primary-subtle text-primary mb-3">
+                            <i class="bi bi-journal-check"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Zlecenia</h5>
+                        <p class="card-text text-muted mb-0">Lista zlecen i szczegoly realizacji.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasAnyRole('BOSS', 'SMUGGLER')">
+                <a th:href="@{/transports}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-success-subtle text-success mb-3">
+                            <i class="bi bi-truck"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Transporty</h5>
+                        <p class="card-text text-muted mb-0">Plan, statusy i przypisania transportow.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasAnyRole('BOSS', 'SMUGGLER')">
+                <a th:href="@{/routes}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-info-subtle text-info mb-3">
+                            <i class="bi bi-map"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Trasy</h5>
+                        <p class="card-text text-muted mb-0">Definicje tras i poziomy ryzyka.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasAnyRole('BOSS', 'SMUGGLER')">
+                <a th:href="@{/vehicles}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-secondary-subtle text-secondary mb-3">
+                            <i class="bi bi-car-front"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Pojazdy</h5>
+                        <p class="card-text text-muted mb-0">Flota, ladownosc i dostepnosc pojazdow.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section sec:authorize="hasAnyRole('BOSS', 'ACCOUNTANT')" class="mb-4">
+        <div class="dashboard-section-title mb-3">Magazyn i finanse</div>
+        <div class="row g-3">
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasRole('BOSS')">
+                <a th:href="@{/cargos}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-warning-subtle text-warning mb-3">
+                            <i class="bi bi-box-seam"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Ladunki</h5>
+                        <p class="card-text text-muted mb-0">Ewidencja ladunkow i przypisania do transportow.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasAnyRole('BOSS', 'ACCOUNTANT')">
+                <a th:href="@{/warehouses}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-dark-subtle text-dark mb-3">
+                            <i class="bi bi-building"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Magazyny</h5>
+                        <p class="card-text text-muted mb-0">Magazyny, pojemnosc i stan zajetosci.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasRole('ACCOUNTANT')">
+                <a th:href="@{/payments}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-danger-subtle text-danger mb-3">
+                            <i class="bi bi-cash-coin"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Platnosci</h5>
+                        <p class="card-text text-muted mb-0">Koszty, przychody i rozliczenia zlecen.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasAnyRole('BOSS', 'ACCOUNTANT')">
+                <a th:href="@{/reports/profit}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-teal bg-opacity-10 text-success mb-3">
+                            <i class="bi bi-bar-chart-line"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Raport zyskow i kosztow</h5>
+                        <p class="card-text text-muted mb-0">Przychody, koszty i wynik finansowy zlecen.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3" sec:authorize="hasAnyRole('BOSS', 'ACCOUNTANT')">
+                <a th:href="@{/reports/warehouse-stock}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-info-subtle text-info mb-3">
+                            <i class="bi bi-boxes"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Raport magazynowy</h5>
+                        <p class="card-text text-muted mb-0">Stan magazynow, ladunki i zajeta pojemnosc.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section sec:authorize="hasRole('ADMIN')" class="mb-4">
+        <div class="dashboard-section-title mb-3">Administracja</div>
+        <div class="row g-3">
+            <div class="col-12 col-md-6 col-xl-3">
+                <a th:href="@{/users}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-primary-subtle text-primary mb-3">
+                            <i class="bi bi-people"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Uzytkownicy</h5>
+                        <p class="card-text text-muted mb-0">Konta, statusy i reset hasel.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <a th:href="@{/roles}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-secondary-subtle text-secondary mb-3">
+                            <i class="bi bi-shield-lock"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Role</h5>
+                        <p class="card-text text-muted mb-0">Slowniki rol i opisy uprawnien.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <a th:href="@{/audit-logs}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-warning-subtle text-warning mb-3">
+                            <i class="bi bi-clock-history"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Audyt</h5>
+                        <p class="card-text text-muted mb-0">Historia zmian zapisanych w systemie.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <a th:href="@{/auth-logs}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-info-subtle text-info mb-3">
+                            <i class="bi bi-person-check"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Logi logowania</h5>
+                        <p class="card-text text-muted mb-0">Zdarzenia logowania i wylogowania.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <a th:href="@{/swagger-ui/index.html}" class="card dashboard-card h-100 text-decoration-none text-dark">
+                    <div class="card-body">
+                        <span class="dashboard-icon bg-success-subtle text-success mb-3">
+                            <i class="bi bi-braces"></i>
+                        </span>
+                        <h5 class="card-title mb-2">Swagger / API</h5>
+                        <p class="card-text text-muted mb-0">Dokumentacja endpointow REST.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
 </div>
 </body>
 </html>
