@@ -1,0 +1,8 @@
+-- Ten plik jest miejscem na ręczne dane testowe SQL.
+--
+-- Podstawowy schemat bazy nie wymaga uruchamiania tego pliku z insertami.
+-- Dane przykładowe mogą być tworzone przez aplikację, np. przez klasy seederów
+-- w pakiecie `pl.edu.pb.smuggling.seed`.
+--
+-- Plik zostaje w kolejności skryptów jako punkt rozszerzenia na potrzeby
+-- demonstracji lub lokalnych testów.

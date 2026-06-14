@@ -7,9 +7,12 @@ Projekt edukacyjny realizowany na potrzeby przedmiotów:
 
 ## Opis projektu
 
-System zarządzania przemytem papierosów to fikcyjna aplikacja webowa służąca do obsługi wyimaginowanego scenariusza organizacji przemytu papierosów.
+System zarządzania przemytem papierosów to fikcyjna aplikacja webowa służąca do
+obsługi wyimaginowanego scenariusza organizacji przemytu papierosów.
 
-Projekt nie jest przeznaczony do rzeczywistego wykorzystania. Jego celem jest zaprezentowanie umiejętności projektowania relacyjnej bazy danych oraz aplikacji webowej w Javie.
+Projekt nie jest przeznaczony do rzeczywistego wykorzystania. Jego celem jest
+zaprezentowanie projektowania relacyjnej bazy danych oraz aplikacji webowej w
+Javie.
 
 System umożliwia zarządzanie:
 
@@ -25,24 +28,67 @@ System umożliwia zarządzanie:
 - raportami,
 - historią zmian w systemie.
 
----
-
 ## Technologie
 
-Planowane technologie użyte w projekcie:
+Technologie użyte w projekcie:
 
-- Java
-- Spring Boot
-- Spring Security
-- Spring Data JPA / Hibernate
-- Thymeleaf
-- PostgreSQL
-- REST API
-- Swagger UI
-- Bootstrap
-- Git / GitHub
+- Java,
+- Spring Boot,
+- Spring Security,
+- Spring Data JPA / Hibernate,
+- Thymeleaf,
+- PostgreSQL,
+- REST API,
+- Swagger UI / OpenAPI,
+- Bootstrap,
+- Git / GitHub.
 
----
+## Uruchomienie lokalne
+
+Backend uruchamia się z katalogu `backend`.
+
+Na Windows:
+
+```powershell
+cd backend
+.\mvnw.cmd test
+.\mvnw.cmd spring-boot:run
+```
+
+Aplikacja lokalna:
+
+```text
+http://localhost:8080
+```
+
+Swagger UI:
+
+```text
+http://localhost:8080/swagger-ui/index.html
+```
+
+OpenAPI JSON:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+Przykładowe requesty HTTP znajdują się w `backend/requests.http`.
+
+## Baza danych
+
+Skrypty SQL znajdują się w katalogu `database`. Kolejność uruchamiania plików
+`01-08.sql` jest opisana w `database/README.md`.
+
+Aplikacja korzysta z JPA/Hibernate do komunikacji z bazą. Schemat bazy zawiera
+tabele, relacje, ograniczenia, indeksy oraz logikę po stronie PostgreSQL:
+
+- widoki,
+- funkcje,
+- procedury,
+- triggery.
+
+Skrypty do testów wydajnościowych znajdują się w `database/performance`.
 
 ## Role użytkowników
 
@@ -50,34 +96,35 @@ W systemie przewidziano następujące role:
 
 | Rola | Opis |
 |---|---|
-| `ADMIN` | Zarządza użytkownikami i rolami |
-| `BOSS` | Tworzy zlecenia, zarządza transportami i widzi raporty |
-| `SMUGGLER` | Widzi aktywnie przypisane do siebie transporty |
-| `ACCOUNTANT` | Zarządza płatnościami i raportami finansowymi |
-
----
+| `ADMIN` | Zarządza użytkownikami, rolami, audytem i dokumentacją API. |
+| `BOSS` | Tworzy zlecenia, zarządza transportami i widzi raporty. |
+| `SMUGGLER` | Widzi aktywnie przypisane do siebie transporty oraz wybrane dane operacyjne. |
+| `ACCOUNTANT` | Zarządza płatnościami i raportami finansowymi. |
 
 ## Główne moduły systemu
 
 ### 1. Użytkownicy i role
 
-Moduł odpowiedzialny za rejestrację, logowanie, zarządzanie użytkownikami oraz przypisywanie ról.
+Moduł odpowiedzialny za logowanie, zarządzanie użytkownikami oraz przypisywanie
+ról.
 
 ### 2. Zlecenia
 
-Moduł odpowiedzialny za tworzenie i obsługę zleceń przemytu.
+Moduł odpowiedzialny za tworzenie i obsługę zleceń.
 
 ### 3. Transporty
 
-Moduł odpowiedzialny za planowanie transportów, zmianę ich statusów oraz przypisywanie przemytników.
+Moduł odpowiedzialny za planowanie transportów, zmianę ich statusów oraz
+przypisywanie przemytników.
 
 ### 4. Trasy i pojazdy
 
-Moduł odpowiedzialny za zarządzanie trasami oraz pojazdami wykorzystywanymi w transportach.
+Moduł odpowiedzialny za zarządzanie trasami oraz pojazdami wykorzystywanymi w
+transportach.
 
 ### 5. Ładunki
 
-Moduł odpowiedzialny za zarządzanie ładunkami papierosów.
+Moduł odpowiedzialny za zarządzanie ładunkami.
 
 ### 6. Magazyny
 
@@ -89,43 +136,31 @@ Moduł odpowiedzialny za rejestrowanie kosztów, przychodów i rozliczeń.
 
 ### 8. Raporty
 
-Moduł odpowiedzialny za generowanie raportów, np. raportu zysków i strat, raportu magazynowego oraz raportu aktywnych transportów.
+Moduł odpowiedzialny za generowanie raportu zysków i kosztów, raportu
+magazynowego oraz raportu ryzyka transportów.
 
 ### 9. Historia zmian
 
-Moduł odpowiedzialny za zapisywanie informacji o wybranych zmianach wykonanych w systemie.
+Moduł odpowiedzialny za zapisywanie informacji o wybranych zmianach wykonanych w
+systemie.
 
----
+## Dokumentacja
 
-## Podział pracy
+- opis projektu: `docs/01-opis-projektu.md`,
+- wymagania Java: `docs/02-wymagania-java.md`,
+- wymagania bazy danych: `docs/03-wymagania-baza-danych.md`,
+- podział pracy: `docs/04-podzial-pracy.md`,
+- analiza biznesowa: `docs/05-analiza-biznesowa.md`,
+- model danych i ERD: `docs/06-model-danych.md`,
+- bezpieczeństwo: `docs/07-bezpieczenstwo.md`,
+- REST API: `docs/08-api-rest.md`,
+- testy wydajnościowe: `docs/09-testy-wydajnosciowe.md`.
 
-Projekt realizowany jest przez trzy osoby.
+Bezpośredni plik diagramu:
 
-| Osoba | Główny zakres |
-|---|---|
-| Kamil Osakowicz | Użytkownicy, role, zlecenia, podstawowa konfiguracja bezpieczeństwa, historia zmian |
-| Filip Kamiński | Transporty, trasy, pojazdy, przypisanie przemytników, bezpieczeństwo modułu transportowego |
-| Karol Daniło | Ładunki, magazyny, płatności, raporty, bezpieczeństwo modułu magazynowo-finansowego |
-
-Szczegółowy podział pracy znajduje się w pliku:
-
-`docs/04-podzial-pracy.md`
-
-## Analiza biznesowa
-
-Opis zakresu systemu, ról użytkowników, głównych encji, operacji biznesowych oraz wymagań znajduje się w pliku:
-
-`docs/05-analiza-biznesowa.md`
-
-## Model danych
-
-Opis modelu danych oraz diagram ERD znajduja sie w pliku:
-
-`docs/06-model-danych.md`
-
-Bezposredni plik diagramu:
-
-`docs/diagram.svg`
+```text
+docs/diagram.svg
+```
 
 ## Autorzy
 

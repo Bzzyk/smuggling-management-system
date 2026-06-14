@@ -1,32 +1,34 @@
-# Database setup
+# Baza danych
 
-This directory contains the SQL scripts required to recreate the PostgreSQL
-database structure used by the application.
+Ten katalog zawiera skrypty SQL potrzebne do odtworzenia struktury bazy
+PostgreSQL używanej przez aplikację.
 
-Run the files in this order:
+## Kolejność uruchamiania
 
-| Order | File | Purpose |
-|---|---|---|
-| 1 | `01_schema.sql` | Creates tables, primary keys, foreign keys, `NOT NULL`, `UNIQUE`, `CHECK` constraints and base indexes. |
-| 2 | `02_dictionaries.sql` | Inserts dictionary values: roles, order statuses, transport statuses, route difficulty levels, cargo types and payment statuses. |
-| 3 | `03_sample_data.sql` | Reserved for sample data. Currently empty. |
-| 4 | `04_views.sql` | Creates reporting and helper views, for example `v_available_vehicles`, `v_available_cargo`, `v_active_transports`, `v_profit_report`. |
-| 5 | `05_functions.sql` | Creates SQL/PLpgSQL functions for counting orders, checking roles, risk scoring and profit calculations. |
-| 6 | `06_procedures.sql` | Creates procedures for creating orders, changing statuses, assigning smugglers, vehicles and cargo, and registering payments. |
-| 7 | `07_triggers.sql` | Creates trigger functions and triggers for audit, validation, warehouse capacity and profit refresh logic. |
-| 8 | `08_roles_permissions.sql` | Creates database roles/permissions used for the project database. |
+Pliki należy uruchamiać w tej kolejności:
 
-## Requirements
+| Kolejność | Plik | Opis |
+|---:|---|---|
+| 1 | `01_schema.sql` | Tworzy tabele, klucze główne, klucze obce, ograniczenia `NOT NULL`, `UNIQUE`, `CHECK` oraz podstawowe indeksy. |
+| 2 | `02_dictionaries.sql` | Wstawia wartości słownikowe: role, statusy zleceń, statusy transportów, poziomy trudności tras, typy ładunków i statusy płatności. |
+| 3 | `03_sample_data.sql` | Miejsce na ręczne dane testowe SQL. Aktualnie zawiera tylko komentarz. Nie jest wymagany do podstawowego uruchomienia schematu. |
+| 4 | `04_views.sql` | Tworzy widoki pomocnicze i raportowe, np. `v_available_vehicles`, `v_available_cargo`, `v_active_transports`, `v_profit_report`. |
+| 5 | `05_functions.sql` | Tworzy funkcje SQL/PLpgSQL do zliczania, sprawdzania ról, liczenia ryzyka i zysku. |
+| 6 | `06_procedures.sql` | Tworzy procedury do obsługi zleceń, statusów, przypisań, magazynów i płatności. |
+| 7 | `07_triggers.sql` | Tworzy funkcje triggerów i triggery do audytu, walidacji, pojemności magazynu i odświeżania zysku. |
+| 8 | `08_roles_permissions.sql` | Definiuje role i uprawnienia bazodanowe używane w projekcie. |
 
-- PostgreSQL 14 or newer.
-- A database user with permission to create tables, indexes, views, functions,
-  procedures and triggers.
-- The application validates the existing schema with Hibernate:
+## Wymagania
+
+- PostgreSQL 14 lub nowszy,
+- użytkownik bazy z prawami do tworzenia tabel, indeksów, widoków, funkcji,
+  procedur i triggerów,
+- aplikacja po stronie Hibernate używa trybu walidacji schematu:
   `spring.jpa.hibernate.ddl-auto=validate`.
 
-## Recreating the database
+## Odtworzenie bazy
 
-Example using `psql`:
+Przykład dla `psql`:
 
 ```bash
 createdb smuggling
@@ -40,16 +42,26 @@ psql -d smuggling -f database/07_triggers.sql
 psql -d smuggling -f database/08_roles_permissions.sql
 ```
 
-For an existing database, run the files from `01` to `08` in the same order.
-Most objects use `IF NOT EXISTS` or `CREATE OR REPLACE`, but data scripts should
-still be executed intentionally on the target database.
+Na istniejącej bazie pliki też należy uruchamiać od `01` do `08`. Część obiektów
+używa `IF NOT EXISTS` albo `CREATE OR REPLACE`, ale uruchomienie skryptów na
+współdzielonej bazie powinno być wykonane świadomie.
 
-## Performance scripts
+## Dane testowe
 
-Additional scripts for database performance checks are stored in
+Plik `03_sample_data.sql` nie zawiera dużych insertów. Dane przykładowe mogą być
+tworzone przez aplikację, np. przez seedery w pakiecie
+`pl.edu.pb.smuggling.seed`.
+
+## Testy wydajnościowe
+
+Skrypty do lokalnych testów wydajnościowych są w katalogu
 `database/performance`:
 
-- `01_generate_transports.sql` generates larger test datasets for the
-  `transports` table.
-- `02_explain_transports.sql` runs `EXPLAIN ANALYZE` queries.
-- `03_indexes.sql` contains proposed optimization indexes.
+- `01_generate_transports.sql` - generuje większy zestaw danych dla tabeli
+  `transports`,
+- `02_explain_transports.sql` - uruchamia zapytania `EXPLAIN ANALYZE`,
+- `03_indexes.sql` - dodaje proponowane indeksy optymalizacyjne.
+
+Te skrypty są przeznaczone do lokalnej lub testowej bazy danych. Nie należy
+uruchamiać generatora dużej liczby rekordów na bazie produkcyjnej, hostowanej lub
+współdzielonej bez zgody zespołu.
