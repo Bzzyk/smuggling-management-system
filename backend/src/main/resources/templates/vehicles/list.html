@@ -20,6 +20,30 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
+    <form method="get" th:action="@{/vehicles}" class="row g-2 align-items-end mb-3">
+        <input type="hidden" name="sort" th:value="${sort}">
+        <input type="hidden" name="dir" th:value="${dir}">
+        <div class="col-md-5">
+            <label for="registrationNumber" class="form-label">Rejestracja</label>
+            <input type="text" class="form-control" id="registrationNumber" name="registrationNumber"
+                   th:value="${registrationNumber}" placeholder="np. BI10001">
+        </div>
+        <div class="col-md-4">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="ALL" th:selected="${status == null or status == 'ALL'}">Wszystkie</option>
+                <option value="AVAILABLE" th:selected="${status == 'AVAILABLE'}">Dostepny</option>
+                <option value="UNAVAILABLE" th:selected="${status == 'UNAVAILABLE'}">W trasie / Zablokowany</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">
+                <i class="bi bi-search"></i> Filtruj
+            </button>
+            <a th:href="@{/vehicles}" class="btn btn-outline-secondary">Wyczysc</a>
+        </div>
+    </form>
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -28,16 +52,16 @@
                     <tr>
                         <th scope="col">
                             <a class="text-decoration-none text-dark"
-                               th:href="@{/vehicles(sort='registrationNumber', dir=${sort == 'registrationNumber' ? reverseDir : 'asc'})}">Rejestracja</a>
+                               th:href="@{/vehicles(sort='registrationNumber', dir=${sort == 'registrationNumber' ? reverseDir : 'asc'}, registrationNumber=${registrationNumber}, status=${status})}">Rejestracja</a>
                         </th>
                         <th scope="col">
                             <a class="text-decoration-none text-dark"
-                               th:href="@{/vehicles(sort='brand', dir=${sort == 'brand' ? reverseDir : 'asc'})}">Marka i Model</a>
+                               th:href="@{/vehicles(sort='brand', dir=${sort == 'brand' ? reverseDir : 'asc'}, registrationNumber=${registrationNumber}, status=${status})}">Marka i Model</a>
                         </th>
                         <th scope="col">Typ</th>
                         <th scope="col">
                             <a class="text-decoration-none text-dark"
-                               th:href="@{/vehicles(sort='loadCapacity', dir=${sort == 'loadCapacity' ? reverseDir : 'asc'})}">Ladownosc</a>
+                               th:href="@{/vehicles(sort='loadCapacity', dir=${sort == 'loadCapacity' ? reverseDir : 'asc'}, registrationNumber=${registrationNumber}, status=${status})}">Ladownosc</a>
                         </th>
                         <th scope="col">Status</th>
                         <th scope="col" class="text-end" sec:authorize="hasAnyRole('ADMIN', 'BOSS')">Akcje</th>
@@ -80,11 +104,11 @@
         <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${vehiclePage.totalPages > 1}">
             <a class="btn btn-sm btn-outline-secondary"
                th:classappend="${vehiclePage.first} ? 'disabled'"
-               th:href="@{/vehicles(page=${vehiclePage.number - 1}, sort=${sort}, dir=${dir})}">Poprzednia</a>
+               th:href="@{/vehicles(page=${vehiclePage.number - 1}, sort=${sort}, dir=${dir}, registrationNumber=${registrationNumber}, status=${status})}">Poprzednia</a>
             <span>Strona <strong th:text="${vehiclePage.number + 1}">1</strong> z <strong th:text="${vehiclePage.totalPages}">1</strong></span>
             <a class="btn btn-sm btn-outline-secondary"
                th:classappend="${vehiclePage.last} ? 'disabled'"
-               th:href="@{/vehicles(page=${vehiclePage.number + 1}, sort=${sort}, dir=${dir})}">Nastepna</a>
+               th:href="@{/vehicles(page=${vehiclePage.number + 1}, sort=${sort}, dir=${dir}, registrationNumber=${registrationNumber}, status=${status})}">Nastepna</a>
         </div>
     </div>
 </div>

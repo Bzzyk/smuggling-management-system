@@ -37,6 +37,15 @@ public class VehicleService {
         return vehicleRepository.findByActiveTrue(pageable);
     }
 
+    public Page<Vehicle> getVehiclesPage(int page, int size, String sort, String dir, String registrationNumber, String status) {
+        Pageable pageable = PageRequest.of(
+                Math.max(page, 0),
+                size,
+                Sort.by(getDirection(dir), getVehicleSortProperty(sort))
+        );
+        return vehicleRepository.findFleetVehicles(getRegistrationNumberPattern(registrationNumber), getAvailableFilter(status), pageable);
+    }
+
     public Vehicle getVehicleById(Integer id) {
         return vehicleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono pojazdu o ID: " + id));
@@ -125,6 +134,21 @@ public class VehicleService {
         return switch (sort) {
             case "registrationNumber", "brand", "model", "loadCapacity" -> sort;
             default -> "registrationNumber";
+        };
+    }
+
+    private String getRegistrationNumberPattern(String value) {
+        if (value == null || value.isBlank()) {
+            return "%";
+        }
+        return "%" + value.trim().toLowerCase() + "%";
+    }
+
+    private Boolean getAvailableFilter(String status) {
+        return switch (status == null ? "ALL" : status) {
+            case "AVAILABLE" -> true;
+            case "UNAVAILABLE" -> false;
+            default -> null;
         };
     }
 }
