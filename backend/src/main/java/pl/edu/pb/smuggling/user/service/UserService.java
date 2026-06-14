@@ -21,7 +21,8 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
-
+import pl.edu.pb.smuggling.user.model.SmugglerProfile;
+import pl.edu.pb.smuggling.user.repository.SmugglerProfileRepository;
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -30,6 +31,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final SessionRegistry sessionRegistry;
     private final AuditLogService auditLogService;
+    private final SmugglerProfileRepository smugglerProfileRepository;
 
     public boolean changePassword(String username, String oldPassword, String newPassword) {
         User user = userRepository.findByUsername(username).orElse(null);
@@ -43,7 +45,7 @@ public class UserService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-
+        
         // Invalidate sessions
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             if (principal instanceof UserDetails userDetails) {
@@ -119,6 +121,7 @@ public class UserService {
                 user.setRoles(roles);
             }
             userRepository.save(user);
+            syncSmugglerProfile(user);
         }
     }
 
@@ -131,7 +134,8 @@ public class UserService {
         Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
         user.setRoles(roles);
         userRepository.save(user);
-        
+        syncSmugglerProfile(user);
+
         Map<String, Object> newProfile = new HashMap<>();
         newProfile.put("username", user.getUsername());
         newProfile.put("email", user.getEmail());
@@ -166,5 +170,31 @@ public class UserService {
             return true;
         }
         return false;
+    }
+
+    private void syncSmugglerProfile(User user) {
+        boolean hasSmugglerRole = user.getRoles().stream()
+                .anyMatch(role -> "SMUGGLER".equals(role.getName()));
+
+        SmugglerProfile profile = smugglerProfileRepository.findById(user.getId()).orElse(null);
+
+        if (hasSmugglerRole) {
+            if (profile == null) {
+                profile = new SmugglerProfile();
+                profile.setUser(user);
+                profile.setExperienceLevel("JUNIOR");
+                profile.setCompletedTransportsCount(0);
+                profile.setFailedTransportsCount(0);
+                profile.setActive(true);
+                profile.setNotes("Profil utworzony automatycznie po nadaniu roli SMUGGLER");
+            } else {
+                profile.setActive(true);
+            }
+
+            smugglerProfileRepository.save(profile);
+        } else if (profile != null) {
+            profile.setActive(false);
+            smugglerProfileRepository.save(profile);
+        }
     }
 }
