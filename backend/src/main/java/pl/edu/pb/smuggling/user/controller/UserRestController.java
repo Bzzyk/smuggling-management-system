@@ -1,6 +1,9 @@
 package pl.edu.pb.smuggling.user.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.security.access.prepost.PreAuthorize;
 import pl.edu.pb.smuggling.user.model.User;
 import pl.edu.pb.smuggling.user.model.dto.UserDto;
@@ -18,9 +22,7 @@ import pl.edu.pb.smuggling.user.model.dto.PasswordResetRequest;
 import pl.edu.pb.smuggling.user.service.UserService;
 import jakarta.validation.Valid;
 
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,10 +32,17 @@ public class UserRestController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> users = userService.getAllUsers().stream()
-                .map(UserDto::fromEntity)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<UserDto>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "asc") String dir
+    ) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 200);
+        Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Page<UserDto> users = userService.getAllUsers(PageRequest.of(safePage, safeSize, Sort.by(direction, sort)))
+                .map(UserDto::fromEntity);
         return ResponseEntity.ok(users);
     }
 

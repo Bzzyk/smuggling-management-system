@@ -1,6 +1,8 @@
 package pl.edu.pb.smuggling.order.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.edu.pb.smuggling.order.dto.OrderFormDto;
@@ -29,6 +31,10 @@ public class OrderService {
 
     public List<pl.edu.pb.smuggling.order.model.SmugglingOrder> findAll() {
         return orderRepository.findAll();
+    }
+
+    public Page<pl.edu.pb.smuggling.order.model.SmugglingOrder> findAll(Pageable pageable) {
+        return orderRepository.findAll(pageable);
     }
 
     public pl.edu.pb.smuggling.order.model.SmugglingOrder getOrderById(Integer id) {

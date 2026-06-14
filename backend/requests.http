@@ -1,0 +1,17 @@
+### Swagger UI
+GET http://localhost:8080/swagger-ui/index.html
+
+### API docs
+GET http://localhost:8080/v3/api-docs
+
+### Orders list, paginated
+GET http://localhost:8080/api/orders?page=0&size=20&sort=id&dir=asc
+Authorization: Basic admin admin
+
+### Users list, paginated
+GET http://localhost:8080/api/users?page=0&size=20&sort=id&dir=asc
+Authorization: Basic admin admin
+
+### Transports list, already paginated
+GET http://localhost:8080/api/transports?page=0&size=10&sort=transportDate&dir=asc
+Authorization: Basic admin admin
