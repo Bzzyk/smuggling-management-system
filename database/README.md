@@ -62,6 +62,4 @@ Skrypty do lokalnych testów wydajnościowych są w katalogu
 - `02_explain_transports.sql` - uruchamia zapytania `EXPLAIN ANALYZE`,
 - `03_indexes.sql` - dodaje proponowane indeksy optymalizacyjne.
 
-Te skrypty są przeznaczone do lokalnej lub testowej bazy danych. Nie należy
-uruchamiać generatora dużej liczby rekordów na bazie produkcyjnej, hostowanej lub
-współdzielonej bez zgody zespołu.
+Te skrypty są przeznaczone do lokalnej lub testowej bazy danych.
