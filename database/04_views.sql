@@ -123,6 +123,7 @@ SELECT
     v.load_capacity
 FROM vehicles v
 WHERE v.available = TRUE
+AND v.active = TRUE
   AND NOT EXISTS (
       SELECT 1
       FROM transports t

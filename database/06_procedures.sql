@@ -246,6 +246,7 @@ DECLARE
     v_vehicle_available BOOLEAN;
     v_vehicle_capacity INT;
     v_current_packages INT;
+    v_vehicle_active BOOLEAN;
 BEGIN
     SELECT ts.name, t.vehicle_id
     INTO v_transport_status, v_current_vehicle_id
@@ -266,15 +267,19 @@ BEGIN
         RETURN;
     END IF;
 
-    SELECT available, load_capacity
-    INTO v_vehicle_available, v_vehicle_capacity
+    SELECT available, active, load_capacity
+    INTO v_vehicle_available, v_vehicle_active, v_vehicle_capacity
     FROM vehicles
     WHERE id = p_vehicle_id;
-
+    
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Pojazd o id % nie istnieje', p_vehicle_id;
     END IF;
-
+    
+    IF v_vehicle_active = FALSE THEN
+        RAISE EXCEPTION 'Pojazd o id % jest nieaktywny', p_vehicle_id;
+    END IF;
+    
     IF v_vehicle_available = FALSE THEN
         RAISE EXCEPTION 'Pojazd o id % jest oznaczony jako niedostepny', p_vehicle_id;
     END IF;
