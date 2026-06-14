@@ -31,12 +31,16 @@ public class VehicleController {
     public String listVehicles(@RequestParam(defaultValue = "0") int page,
                                @RequestParam(defaultValue = "registrationNumber") String sort,
                                @RequestParam(defaultValue = "asc") String dir,
+                               @RequestParam(required = false) String registrationNumber,
+                               @RequestParam(defaultValue = "ALL") String status,
                                Model model) {
-        Page<Vehicle> vehiclePage = vehicleService.getVehiclesPage(page, 10, sort, dir);
+        Page<Vehicle> vehiclePage = vehicleService.getVehiclesPage(page, 10, sort, dir, registrationNumber, status);
         model.addAttribute("vehiclePage", vehiclePage);
         model.addAttribute("vehicles", vehiclePage.getContent());
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
+        model.addAttribute("registrationNumber", registrationNumber);
+        model.addAttribute("status", status);
         model.addAttribute("reverseDir", "asc".equalsIgnoreCase(dir) ? "desc" : "asc");
         return "vehicles/list";
     }
