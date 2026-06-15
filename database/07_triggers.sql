@@ -251,33 +251,52 @@ EXECUTE FUNCTION validate_transport_status_change();
 
 
 -- Trigger zabezpiecza przypisanie przemytnika takze wtedy, gdy ktos ominie
--- procedure assign_smuggler_to_transport i wykona INSERT/UPDATE recznie.
+-- procedure assign_smuggler_to_transport i wykona INSERT/UPDATE/DELETE recznie.
 
 CREATE OR REPLACE FUNCTION validate_smuggler_assignment()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
+    v_transport_id INT;
     v_transport_status VARCHAR(30);
     v_smuggler_active BOOLEAN;
 BEGIN
-    IF NEW.active = FALSE THEN
-        RETURN NEW;
-    END IF;
+    v_transport_id := CASE
+        WHEN TG_OP = 'DELETE' THEN OLD.transport_id
+        ELSE NEW.transport_id
+    END;
 
     SELECT ts.name
     INTO v_transport_status
     FROM transports t
     JOIN transport_statuses ts
         ON ts.id = t.status_id
-    WHERE t.id = NEW.transport_id;
+    WHERE t.id = v_transport_id;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Transport o id % nie istnieje', NEW.transport_id;
+        RAISE EXCEPTION 'Transport o id % nie istnieje', v_transport_id;
     END IF;
 
     IF v_transport_status <> 'ZAPLANOWANY' THEN
-        RAISE EXCEPTION 'Nie mozna aktywnie przypisac przemytnika do transportu o statusie %', v_transport_status;
+        IF TG_OP = 'DELETE' THEN
+            RAISE EXCEPTION 'Nie mozna usunac przypisania ekipy dla transportu o statusie %', v_transport_status;
+        ELSIF TG_OP = 'INSERT' THEN
+            RAISE EXCEPTION 'Nie mozna dodac przypisania ekipy dla transportu o statusie %', v_transport_status;
+        ELSIF NEW.transport_id IS DISTINCT FROM OLD.transport_id
+           OR NEW.smuggler_id IS DISTINCT FROM OLD.smuggler_id
+           OR NEW.note IS DISTINCT FROM OLD.note
+           OR (NEW.active = TRUE AND OLD.active = FALSE) THEN
+            RAISE EXCEPTION 'Nie mozna edytowac przypisania ekipy dla transportu o statusie %', v_transport_status;
+        END IF;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    END IF;
+
+    IF NEW.active = FALSE THEN
+        RETURN NEW;
     END IF;
 
     SELECT sp.active
@@ -318,65 +337,9 @@ $$;
 DROP TRIGGER IF EXISTS trg_validate_smuggler_assignment ON smuggler_assignments;
 
 CREATE TRIGGER trg_validate_smuggler_assignment
-BEFORE INSERT OR UPDATE OF transport_id, smuggler_id, active ON smuggler_assignments
-FOR EACH ROW
-EXECUTE FUNCTION validate_smuggler_assignment();
-
-
--- PREVENT_NON_PLANNED_ASSIGNMENT_EDIT
-
-
--- Przypisania ekipy mozna recznie dodawac i usuwac tylko dla transportu
--- zaplanowanego. Aktualizacja active=false jest nadal dozwolona dla triggera,
--- ktory zamyka przypisania po zakonczeniu transportu.
-
-CREATE OR REPLACE FUNCTION prevent_non_planned_assignment_edit()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_transport_id INT;
-    v_transport_status VARCHAR(30);
-BEGIN
-    v_transport_id := CASE
-        WHEN TG_OP = 'DELETE' THEN OLD.transport_id
-        ELSE NEW.transport_id
-    END;
-
-    SELECT ts.name
-    INTO v_transport_status
-    FROM transports t
-    JOIN transport_statuses ts
-        ON ts.id = t.status_id
-    WHERE t.id = v_transport_id;
-
-    IF v_transport_status <> 'ZAPLANOWANY' THEN
-        IF TG_OP = 'DELETE' THEN
-            RAISE EXCEPTION 'Nie mozna usunac przypisania ekipy dla transportu o statusie %', v_transport_status;
-        ELSIF TG_OP = 'INSERT' THEN
-            RAISE EXCEPTION 'Nie mozna dodac przypisania ekipy dla transportu o statusie %', v_transport_status;
-        ELSIF NEW.transport_id IS DISTINCT FROM OLD.transport_id
-           OR NEW.smuggler_id IS DISTINCT FROM OLD.smuggler_id
-           OR NEW.note IS DISTINCT FROM OLD.note
-           OR (NEW.active = TRUE AND OLD.active = FALSE) THEN
-            RAISE EXCEPTION 'Nie mozna edytowac przypisania ekipy dla transportu o statusie %', v_transport_status;
-        END IF;
-    END IF;
-
-    IF TG_OP = 'DELETE' THEN
-        RETURN OLD;
-    END IF;
-
-    RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS trg_prevent_non_planned_assignment_edit ON smuggler_assignments;
-
-CREATE TRIGGER trg_prevent_non_planned_assignment_edit
 BEFORE INSERT OR UPDATE OR DELETE ON smuggler_assignments
 FOR EACH ROW
-EXECUTE FUNCTION prevent_non_planned_assignment_edit();
+EXECUTE FUNCTION validate_smuggler_assignment();
 
 
 -- CLOSE_TRANSPORT_ASSIGNMENTS_AND_UPDATE_STATS
