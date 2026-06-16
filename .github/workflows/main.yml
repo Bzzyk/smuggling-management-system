@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -17,10 +18,11 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
       - name: Zbuduj WAR
         run: mvn clean package -DskipTests
+        working-directory: backend
 
       - name: Wyczyść katalog tymczasowy na serwerze
         uses: appleboy/ssh-action@v1
@@ -40,9 +42,9 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "target/smuggling-management-system-*.war"
+          source: "backend/target/smuggling-management-system-*.war"
           target: "/tmp/deploy"
-          strip_components: 1
+          strip_components: 2
           overwrite: true
 
       - name: Uruchom deploy na serwerze
