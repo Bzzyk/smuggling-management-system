@@ -20,3 +20,34 @@ ON TABLES TO ApplicationIdentity;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
 GRANT USAGE, SELECT, UPDATE
 ON SEQUENCES TO ApplicationIdentity;
+
+-- Konta deweloperskie
+CREATE ROLE developers;
+
+GRANT CONNECT ON DATABASE projekt TO developers;
+
+GRANT USAGE ON SCHEMA public TO developers;
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON ALL TABLES IN SCHEMA public
+TO developers;
+
+GRANT USAGE, SELECT, UPDATE
+ON ALL SEQUENCES IN SCHEMA public
+TO developers;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON TABLES TO developers;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT USAGE, SELECT, UPDATE
+ON SEQUENCES TO developers;
+
+CREATE USER dev_karol WITH PASSWORD 'mocne_H@slo123$';
+CREATE USER dev_filip WITH PASSWORD 'mocne_H@slo456&';
+CREATE USER dev_kamil WITH PASSWORD 'mocne_H@slo789)';
+
+GRANT developers TO dev_janek;
+GRANT developers TO dev_ola;
+GRANT developers TO dev_michal;
