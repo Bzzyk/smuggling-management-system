@@ -61,7 +61,7 @@ public class TransportController {
         );
         model.addAttribute("transportPage", transportPage);
         model.addAttribute("transports", transportPage.getContent());
-        model.addAttribute("statuses", transportService.getAllStatuses());
+        model.addAttribute("statusPopularity", transportService.getStatusPopularity());
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
         model.addAttribute("reverseDir", "asc".equalsIgnoreCase(dir) ? "desc" : "asc");
