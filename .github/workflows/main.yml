@@ -1,4 +1,4 @@
-name: Deploy Java WAR to Tomcat
+name: Deploy WAR to Tomcat
 
 on:
   push:
@@ -10,30 +10,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Pobranie repozytorium
+      - name: Pobierz repozytorium
         uses: actions/checkout@v4
 
-      - name: Instalacja JDK
+      - name: Ustaw JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Budowanie WAR
+      - name: Zbuduj WAR
         run: mvn clean package -DskipTests
 
-      - name: Kopiowanie WAR na serwer
-        uses: appleboy/scp-action@v0.1.7
+      - name: Wyczyść katalog tymczasowy na serwerze
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "target/*.war"
-          target: "/tmp/deploy"
+          script: |
+            rm -rf /tmp/deploy/*
+            mkdir -p /tmp/deploy
 
-      - name: Uruchomienie deploya na serwerze
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Wyślij WAR na serwer
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "target/smuggling-management-system-*.war"
+          target: "/tmp/deploy"
+          strip_components: 1
+          overwrite: true
+
+      - name: Uruchom deploy na serwerze
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
