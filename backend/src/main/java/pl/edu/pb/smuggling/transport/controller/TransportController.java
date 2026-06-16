@@ -1,5 +1,6 @@
 package pl.edu.pb.smuggling.transport.controller;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -45,28 +46,43 @@ public class TransportController {
     @GetMapping
     public String listTransports(@AuthenticationPrincipal UserDetails userDetails,
                                  @RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "transportDate") String sort,
-                                 @RequestParam(defaultValue = "desc") String dir,
+                                 @RequestParam(required = false) String sort,
+                                 @RequestParam(required = false) String dir,
                                  @RequestParam(required = false) String status,
-                                 @RequestParam(defaultValue = "ALL") String dateFilter,
+                                 @RequestParam(required = false) String dateFilter,
+                                 HttpSession session,
                                  Model model) {
+        String selectedSort = resolveSessionValue(sort, session, "transportSort", "transportDate");
+        String selectedDir = resolveSessionValue(dir, session, "transportDir", "desc");
+        String selectedDateFilter = resolveSessionValue(dateFilter, session, "transportDateFilter", "ALL");
+        String selectedStatus = status != null ? normalizeStatus(status) : (String) session.getAttribute("transportStatus");
+
+        session.setAttribute("transportSort", selectedSort);
+        session.setAttribute("transportDir", selectedDir);
+        session.setAttribute("transportDateFilter", selectedDateFilter);
+        if (selectedStatus == null) {
+            session.removeAttribute("transportStatus");
+        } else {
+            session.setAttribute("transportStatus", selectedStatus);
+        }
+
         Page<Transport> transportPage = transportService.getVisibleTransports(
                 userDetails.getUsername(),
                 safePage(page),
                 10,
-                sort,
-                dir,
-                status,
-                dateFilter
+                selectedSort,
+                selectedDir,
+                selectedStatus,
+                selectedDateFilter
         );
         model.addAttribute("transportPage", transportPage);
         model.addAttribute("transports", transportPage.getContent());
-        model.addAttribute("statuses", transportService.getAllStatuses());
-        model.addAttribute("sort", sort);
-        model.addAttribute("dir", dir);
-        model.addAttribute("reverseDir", "asc".equalsIgnoreCase(dir) ? "desc" : "asc");
-        model.addAttribute("status", status);
-        model.addAttribute("dateFilter", dateFilter);
+        model.addAttribute("statusPopularity", transportService.getStatusPopularity());
+        model.addAttribute("sort", selectedSort);
+        model.addAttribute("dir", selectedDir);
+        model.addAttribute("reverseDir", "asc".equalsIgnoreCase(selectedDir) ? "desc" : "asc");
+        model.addAttribute("status", selectedStatus);
+        model.addAttribute("dateFilter", selectedDateFilter);
         return "transports/list";
     }
 
@@ -360,6 +376,21 @@ public class TransportController {
 
     private int safePage(int page) {
         return Math.max(page, 0);
+    }
+
+    private String resolveSessionValue(String requestValue, HttpSession session, String attributeName, String defaultValue) {
+        if (requestValue != null && !requestValue.isBlank()) {
+            return requestValue;
+        }
+        Object sessionValue = session.getAttribute(attributeName);
+        if (sessionValue instanceof String value && !value.isBlank()) {
+            return value;
+        }
+        return defaultValue;
+    }
+
+    private String normalizeStatus(String status) {
+        return status.isBlank() ? null : status;
     }
 
     private String extractDbErrorMessage(Exception e, String defaultMsg) {

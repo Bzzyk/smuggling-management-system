@@ -26,10 +26,10 @@
             <label for="status" class="form-label">Status</label>
             <select id="status" name="status" class="form-select">
                 <option value="">Wszystkie</option>
-                <option th:each="transportStatus : ${statuses}"
-                        th:value="${transportStatus.name}"
-                        th:text="${transportStatus.name}"
-                        th:selected="${transportStatus.name == status}">ZAPLANOWANY</option>
+                <option th:each="statusOption : ${statusPopularity}"
+                        th:value="${statusOption.name}"
+                        th:text="${statusOption.name + ' (' + statusOption.count + ')'}"
+                        th:selected="${statusOption.name == status}">ZAPLANOWANY (0)</option>
             </select>
         </div>
         <div class="col-md-3">

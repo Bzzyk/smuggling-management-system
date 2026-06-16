@@ -5,12 +5,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import pl.edu.pb.smuggling.transport.dto.StatusPopularityDto;
 import pl.edu.pb.smuggling.transport.model.Transport;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface TransportRepository extends JpaRepository<Transport, Integer> {
     java.util.List<Transport> findByOrderId(Integer orderId);
+
+    @Query("""
+            SELECT new pl.edu.pb.smuggling.transport.dto.StatusPopularityDto(
+                t.status.name,
+                COUNT(t)
+            )
+            FROM Transport t
+            WHERE t.status IS NOT NULL
+            GROUP BY t.status.name
+            ORDER BY COUNT(t) DESC, t.status.name ASC
+            """)
+    List<StatusPopularityDto> findStatusPopularity();
 
     @Query("""
             SELECT t

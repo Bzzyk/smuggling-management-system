@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.edu.pb.smuggling.common.service.AuditLogService;
 import pl.edu.pb.smuggling.order.model.SmugglingOrder;
 import pl.edu.pb.smuggling.order.repository.SmugglingOrderRepository;
+import pl.edu.pb.smuggling.transport.dto.StatusPopularityDto;
 import pl.edu.pb.smuggling.transport.dto.TransportFormDto;
 import pl.edu.pb.smuggling.transport.model.Route;
 import pl.edu.pb.smuggling.transport.model.Transport;
@@ -99,6 +100,10 @@ public class TransportService {
 
     public List<TransportStatus> getAllStatuses() {
         return transportStatusRepository.findAll();
+    }
+
+    public List<StatusPopularityDto> getStatusPopularity() {
+        return transportRepository.findStatusPopularity();
     }
 
     public Transport getTransportById(Integer id) {
