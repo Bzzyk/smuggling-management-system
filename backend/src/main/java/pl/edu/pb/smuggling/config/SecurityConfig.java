@@ -25,30 +25,34 @@ public class SecurityConfig {
     public SessionRegistry sessionRegistry() {
         return new SessionRegistryImpl();
     }
-
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .sessionManagement(session -> session
-                .maximumSessions(10)
-                .sessionRegistry(sessionRegistry())
-            )
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/error").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/", true)
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            );
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**")
+                )
+                .sessionManagement(session -> session
+                        .maximumSessions(10)
+                        .sessionRegistry(sessionRegistry())
+                )
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                );
+
         return http.build();
     }
 }
